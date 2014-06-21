@@ -527,6 +527,8 @@ INSTALLED_APPS = (
 
     # Monitoring signals
     'monitoring',
+
+    'experiments',
 )
 
 

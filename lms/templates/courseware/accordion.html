@@ -3,6 +3,8 @@
     from util.date_utils import get_time_display
     from django.utils.translation import ugettext as _
     from django.conf import settings
+    from experiments.utils import VerABprint
+
 %>
 
 <%def name="make_chapter(chapter)">
@@ -42,5 +44,9 @@
 </%def>
 
 % for chapter in toc:
-    ${make_chapter(chapter)}
+            <% imprimir = VerABprint(chapter['url_name'], user) %>
+
+            % if imprimir:
+                ${make_chapter(chapter)}
+            % endif
 % endfor

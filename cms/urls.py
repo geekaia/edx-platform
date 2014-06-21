@@ -92,6 +92,18 @@ urlpatterns += patterns(
     url(r'^textbooks/(?P<course_key_string>[^/]+)/(?P<textbook_id>\d[^/]*)$', 'textbooks_detail_handler'),
 )
 
+urlpatterns += patterns(
+    'experiments.views',
+        #url(r'(?ix)^experiments', 'experiments_handler', name='experiments_handler'),
+    url(r'(?ix)^experiments/{}$'.format(parsers.URL_RE_SOURCE), 'experiments_handler'),
+    # url(r'(?ix)^viewexperiment/(?P<idExp>\d+)/$', 'analise_experiment'),
+    url(r'(?ix)^duplicatesection/{}$'.format(parsers.URL_RE_SOURCE), 'block_clone_handler'),
+
+    url(r'(?ix)^experiments/{}(/)?(?P<idExp>.+)?$'.format(parsers.URL_RE_SOURCE), "EmailsExp"),
+
+)
+
+
 js_info_dict = {
     'domain': 'djangojs',
     # We need to explicitly include external Django apps that are not in LOCALE_PATHS.

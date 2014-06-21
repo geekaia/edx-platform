@@ -1,0 +1,113 @@
+<%! from django.utils.translation import ugettext as _ %>
+<%inherit file="../base.html" />
+
+
+<%!
+  from django.utils.translation import ugettext as _
+  from django.core.urlresolvers import reverse
+%>
+
+<%block name="header_extras">
+<!--<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.4.2/pure-min.css">-->
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.4.2/tables-min.css">
+
+</%block>
+
+<%namespace name='static' file='../static_content.html'/>
+<%block name="title">${_("My Experiments")}</%block>
+<%block name="bodyclass">is-signedin course tools view-export</%block>
+
+
+
+<%block name="content">
+
+
+ <div id="content">
+
+
+    <div class="wrapper-mast wrapper">
+      <header class="mast has-subtitle">
+        <h1 class="page-header">
+          <small class="subtitle">${_("Tools")}</small>
+          <span class="sr">&gt; </span>${_("Course Experiments")}
+        </h1>
+      </header>
+    </div>
+
+
+        <!-- CSS goes in the document HEAD or added to your external stylesheet -->
+
+
+    <div class="wrapper-content wrapper">
+        <section class="content">
+            <article class="content-primary" role="main">
+
+                <table class="pure-table pure-table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Descriptions</th>
+                            <th>Curso</th>
+                            <th> Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    % for exp in explist:
+                        <tr>
+                            <td>${exp.descricao}</td>
+                            <td>${exp.course}</td>
+                            <td width="250px">
+                                <div>
+                                <ul>
+                                  <li class="action-item action-view-results">
+                                        <a href="${lms_link.split('jump_to')[0]}expAnalise/${exp.id}/" class="button action-primary action">${_("View Results")}</a>
+                                        <br />
+                                        <a href="${location.url_reverse('experiments')}/${exp.id}" class="button action-primary action">${_("Emails")}</a>
+
+                                  </li>
+
+                                </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    % endfor
+                   </tbody>
+                </table>
+
+                <!--<h1> Curso:  ${curso} </h1>-->
+                <!--<br />-->
+                <!--Tipo  ${tipo}-->
+                <!--<h1> Location: ${location} </h1>-->
+                <!--<br />-->
+
+                <!--<h1> Old_location:  ${old_location} </h1>-->
+                <!--<br />-->
+
+                <!--<h1> Course_module ${course_module} </h1>-->
+                <!--<br />-->
+
+                <!--Agora devo criar um CRUD com uma tabela dos experimentos do edX <br />-->
+                <!--Minha primeira página em HTML do edX-->
+
+
+                <!--<br />-->
+                <!--Nome: <div id="nome"> </div>-->
+            </article>
+        </section>
+    </div>
+
+
+
+
+
+ </div>
+
+
+
+</%block>
+
+
+
+
+
+

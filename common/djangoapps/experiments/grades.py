@@ -15,18 +15,14 @@ from dogapi import dog_stats_api
 from courseware import courses
 from courseware.model_data import FieldDataCache
 from student.models import anonymous_id_for_user
+from submissions import api as sub_api
 from xmodule import graders
 from xmodule.graders import Score
 from xmodule.modulestore.django import modulestore
 from xmodule.modulestore.exceptions import ItemNotFoundError
 from xmodule.util.duedate import get_extended_due_date
-from .models import StudentModule
+from courseware.models import StudentModule
 from .module_render import get_module_for_descriptor
-from submissions import api as sub_api  # installed from the edx-submissions repository
-from opaque_keys import InvalidKeyError
-
-from experiments.utils import urlsExcluir
-
 
 log = logging.getLogger("edx.courseware")
 
@@ -54,9 +50,9 @@ def yield_dynamic_descriptor_descendents(descriptor, module_creator):
         yield next_descriptor
 
 
-def answer_distributions(course_key):
+def answer_distributions(course_id):
     """
-    Given a course_key, return answer distributions in the form of a dictionary
+    Given a course_id, return answer distributions in the form of a dictionary
     mapping:
 
       (problem url_name, problem display_name, problem_id) -> {dict: answer -> count}
@@ -86,60 +82,67 @@ def answer_distributions(course_key):
     # dict: { module.module_state_key : (url_name, display_name) }
     state_keys_to_problem_info = {}  # For caching, used by url_and_display_name
 
-    def url_and_display_name(usage_key):
+    def url_and_display_name(module_state_key):
         """
-        For a given usage_key, return the problem's url and display_name.
+        For a given module_state_key, return the problem's url and display_name.
         Handle modulestore access and caching. This method ignores permissions.
-
-        Raises:
-            InvalidKeyError: if the usage_key does not parse
-            ItemNotFoundError: if there is no content that corresponds
-                to this usage_key.
+        May throw an ItemNotFoundError if there is no content that corresponds
+        to this module_state_key.
         """
         problem_store = modulestore()
-        if usage_key not in state_keys_to_problem_info:
-            problem = problem_store.get_item(usage_key)
+        if module_state_key not in state_keys_to_problem_info:
+            problems = problem_store.get_items(module_state_key, course_id=course_id, depth=1)
+            if not problems:
+                # Likely means that the problem was deleted from the course
+                # after the student had answered. We log this suspicion where
+                # this exception is caught.
+                raise ItemNotFoundError(
+                    "Answer Distribution: Module {} not found for course {}"
+                    .format(module_state_key, course_id)
+                )
+            problem = problems[0]
             problem_info = (problem.url_name, problem.display_name_with_default)
-            state_keys_to_problem_info[usage_key] = problem_info
+            state_keys_to_problem_info[module_state_key] = problem_info
 
-        return state_keys_to_problem_info[usage_key]
+        return state_keys_to_problem_info[module_state_key]
 
     # Iterate through all problems submitted for this course in no particular
     # order, and build up our answer_counts dict that we will eventually return
     answer_counts = defaultdict(lambda: defaultdict(int))
-    for module in StudentModule.all_submitted_problems_read_only(course_key):
+    for module in StudentModule.all_submitted_problems_read_only(course_id):
         try:
             state_dict = json.loads(module.state) if module.state else {}
             raw_answers = state_dict.get("student_answers", {})
         except ValueError:
             log.error(
                 "Answer Distribution: Could not parse module state for " +
-                "StudentModule id={}, course={}".format(module.id, course_key)
+                "StudentModule id={}, course={}".format(module.id, course_id)
             )
             continue
 
-        try:
-            url, display_name = url_and_display_name(module.module_state_key.map_into_course(course_key))
-            # Each problem part has an ID that is derived from the
-            # module.module_state_key (with some suffix appended)
-            for problem_part_id, raw_answer in raw_answers.items():
-                # Convert whatever raw answers we have (numbers, unicode, None, etc.)
-                # to be unicode values. Note that if we get a string, it's always
-                # unicode and not str -- state comes from the json decoder, and that
-                # always returns unicode for strings.
-                answer = unicode(raw_answer)
-                answer_counts[(url, display_name, problem_part_id)][answer] += 1
+        # Each problem part has an ID that is derived from the
+        # module.module_state_key (with some suffix appended)
+        for problem_part_id, raw_answer in raw_answers.items():
+            # Convert whatever raw answers we have (numbers, unicode, None, etc.)
+            # to be unicode values. Note that if we get a string, it's always
+            # unicode and not str -- state comes from the json decoder, and that
+            # always returns unicode for strings.
+            answer = unicode(raw_answer)
 
-        except (ItemNotFoundError, InvalidKeyError):
-            msg = "Answer Distribution: Item {} referenced in StudentModule {} " + \
-                  "for user {} in course {} not found; " + \
-                  "This can happen if a student answered a question that " + \
-                  "was later deleted from the course. This answer will be " + \
-                  "omitted from the answer distribution CSV."
-            log.warning(
-                msg.format(module.module_state_key, module.id, module.student_id, course_key)
-            )
-            continue
+            try:
+                url, display_name = url_and_display_name(module.module_state_key)
+            except ItemNotFoundError:
+                msg = "Answer Distribution: Item {} referenced in StudentModule {} " + \
+                      "for user {} in course {} not found; " + \
+                      "This can happen if a student answered a question that " + \
+                      "was later deleted from the course. This answer will be " + \
+                      "omitted from the answer distribution CSV."
+                log.warning(
+                    msg.format(module.module_state_key, module.id, module.student_id, course_id)
+                )
+                continue
+
+            answer_counts[(url, display_name, problem_part_id)][answer] += 1
 
     return answer_counts
 
@@ -174,16 +177,13 @@ def _grade(student, request, course, keep_raw_scores):
 
     More information on the format is in the docstring for CourseGrader.
     """
-    course.urlsexcluir = urlsExcluir(request.user)
     grading_context = course.grading_context
     raw_scores = []
 
     # Dict of item_ids -> (earned, possible) point tuples. This *only* grabs
     # scores that were registered with the submissions API, which for the moment
     # means only openassessment (edx-ora2)
-    submissions_scores = sub_api.get_scores(
-        course.id.to_deprecated_string(), anonymous_id_for_user(student, course.id)
-    )
+    submissions_scores = sub_api.get_scores(course.id, anonymous_id_for_user(student, course.id))
 
     totaled_scores = {}
     # This next complicated loop is just to collect the totaled_scores, which is
@@ -206,7 +206,7 @@ def _grade(student, request, course, keep_raw_scores):
             # API. If scores exist, we have to calculate grades for this section.
             if not should_grade_section:
                 should_grade_section = any(
-                    descriptor.location.to_deprecated_string() in submissions_scores
+                    descriptor.location.url() in submissions_scores
                     for descriptor in section['xmoduledescriptors']
                 )
 
@@ -350,7 +350,7 @@ def _progress_summary(student, request, course):
             # This student must not have access to the course.
             return None
 
-    submissions_scores = sub_api.get_scores(course.id.to_deprecated_string(), anonymous_id_for_user(student, course.id))
+    submissions_scores = sub_api.get_scores(course.id, anonymous_id_for_user(student, course.id))
 
     chapters = []
     # Don't include chapters that aren't displayable (e.g. due to error)
@@ -371,45 +371,21 @@ def _progress_summary(student, request, course):
                 scores = []
 
                 module_creator = section_module.xmodule_runtime.get_module
-                inforExerc = []
-
-                # Adicionarei mais algumas informacoes para que seja possivel pegar o que foi digitado pelo aluno
-                # A quantidade de tentativas, que opcao o usuario escolheu ou que informacao foi digitada
-
 
                 for module_descriptor in yield_dynamic_descriptor_descendents(section_module, module_creator):
                     course_id = course.id
+
+
+                    # print "Variaveis envolvidas: ", course_id, student, module_descriptor, module_creator
                     (correct, total) = get_score(
                         course_id, student, module_descriptor, module_creator, scores_cache=submissions_scores
                     )
-                    tentativas, valorDigitado, idProblem = get_InforExerc(
-                        course_id, student, module_descriptor
-                    )
-
-
-
                     if correct is None and total is None:
-
                         continue
-                    print "USUARIO: ", student
-                    print "TENTATIVAS ", tentativas, " VALOR DIGITADO: ", valorDigitado
-                    print "CORRECT: ", correct, " total ", total
-                    print "IDPROBLEM: ", idProblem
-
-                    vals=[]
-                    vals.append(tentativas)
-                    vals.append(valorDigitado)
-                    vals.append(idProblem)
-
-                    inforExerc.append(vals)
-
-
 
                     scores.append(Score(correct, total, graded, module_descriptor.display_name_with_default))
 
                 scores.reverse()
-                inforExerc.reverse()
-
                 section_total, _ = graders.aggregate_scores(
                     scores, section_module.display_name_with_default)
 
@@ -418,7 +394,6 @@ def _progress_summary(student, request, course):
                     'display_name': section_module.display_name_with_default,
                     'url_name': section_module.url_name,
                     'scores': scores,
-                    'inforExerc': inforExerc,
                     'section_total': section_total,
                     'format': module_format,
                     'due': get_extended_due_date(section_module),
@@ -455,7 +430,7 @@ def get_score(course_id, user, problem_descriptor, module_creator, scores_cache=
     if not user.is_authenticated():
         return (None, None)
 
-    location_url = problem_descriptor.location.to_deprecated_string()
+    location_url = problem_descriptor.location.url()
     if location_url in scores_cache:
         return scores_cache[location_url]
 
@@ -513,110 +488,6 @@ def get_score(course_id, user, problem_descriptor, module_creator, scores_cache=
         total = weight
 
     return (correct, total)
-
-
-def get_InforExerc(course_id, user, problem_descriptor):
-    """
-    Return information about the exercise done by the user
-
-    """
-    # scores_cache = scores_cache or {}
-
-    if not user.is_authenticated():
-        return None, None
-
-    # Comentei, mas nao sei o que faz!!!!!!!!
-    # location_url = problem_descriptor.location.url()
-    # if location_url in scores_cache:
-    #     return scores_cache[location_url]
-
-    # some problems have state that is updated independently of interaction
-    # with the LMS, so they need to always be scored. (E.g. foldit.)
-    # if problem_descriptor.always_recalculate_grades:
-    #     problem = module_creator(problem_descriptor)
-    #     if problem is None:
-    #         return (None, None, None)
-    #     score = problem.get_score()
-    #     if score is not None:
-    #
-    #
-    #         return (score['score'], score['total'])
-    #     else:
-    #         return (None, None)
-
-    # if not problem_descriptor.has_score:
-    #     # These are not problems, and do not have a score
-    #     return (None, None)
-
-    tentativas = None
-    valorDigitado = None
-    idProblem = None
-
-    try:
-        student_module = StudentModule.objects.get(
-            student=user,
-            course_id=course_id,
-            module_state_key=problem_descriptor.location
-        )
-
-        # Tenta imprimir algumas informacoes
-
-        # Fica None caso nao de para pegar as informacoes
-
-        st=None
-
-        try:
-            st = json.loads(student_module.state)
-            tentativas = st['attempts']
-
-        except:
-            print "Tentativas Fica None"
-
-        try:
-            if st is not None:
-                st = json.loads(student_module.state)
-
-            valorDigitado = st['student_answers'][st['student_answers'].keys()[0]]
-
-            idProblem = st['student_answers'].keys()[0]
-
-        except:
-            print "Valor digitado fica None"
-
-    except StudentModule.DoesNotExist:
-        student_module = None
-
-    # Acredito que isto seja necessario somente para as NOTAS!
-
-    # if student_module is not None and student_module.max_grade is not None:
-    #     correct = student_module.grade if student_module.grade is not None else 0
-    #     total = student_module.max_grade
-    # else:
-    #     # If the problem was not in the cache, or hasn't been graded yet,
-    #     # we need to instantiate the problem.
-    #     # Otherwise, the max score (cached in student_module) won't be available
-    #     problem = module_creator(problem_descriptor)
-    #     if problem is None:
-    #         return (None, None)
-    #
-    #     correct = 0.0
-    #     total = problem.max_score()
-    #
-    #     # Problem may be an error module (if something in the problem builder failed)
-    #     # In which case total might be None
-    #     if total is None:
-    #         return (None, None)
-
-    # # Now we re-weight the problem, if specified
-    # weight = problem_descriptor.weight
-    # if weight is not None:
-    #     if total == 0:
-    #         log.exception("Cannot reweight a problem with zero total points. Problem: " + str(student_module))
-    #         return (correct, total)
-    #     correct = correct * weight / total
-    #     total = weight
-
-    return tentativas, valorDigitado, idProblem
 
 
 @contextmanager

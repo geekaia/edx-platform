@@ -414,6 +414,8 @@ class CourseFields(object):
 class CourseDescriptor(CourseFields, SequenceDescriptor):
     module_class = SequenceModule
 
+    urlsexcluir = None
+
     def __init__(self, *args, **kwargs):
         """
         Expects the same arguments as XModuleDescriptor.__init__
@@ -779,6 +781,28 @@ class CourseDescriptor(CourseFields, SequenceDescriptor):
                     yield module_descriptor
 
         for c in self.get_children():
+
+            # print "USER REQUEST asldfjlajsdlfjlasdjfl: ", self.userRequest, " URL: ",
+            # Agora veremos se a coisa ira funcionar
+            url = c.location.url().split('/')[len(c.location.url().split('/'))-1]
+
+            pular=False
+
+            # Se nao encontra, entao deve-se continuar
+
+            if self.urlsexcluir != None:
+
+                print "URLEXCLUIR IS NOT NONE"
+
+                if len(self.urlsexcluir)>0:
+                    print "URLEXCLUIR MAIOR QUE 0"
+
+                    for urlEx in self.urlsexcluir:
+                        if url == urlEx:
+                            pular = True
+            if pular:
+                continue
+
             for s in c.get_children():
                 if s.graded:
                     xmoduledescriptors = list(yield_descriptor_descendents(s))

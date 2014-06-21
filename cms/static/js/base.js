@@ -97,6 +97,7 @@ domReady(function() {
     // expand/collapse methods for optional date setters
     $('.set-date').bind('click', showDateSetter);
     $('.remove-date').bind('click', removeDateSetter);
+    $('.duplicate-section-button').bind('click', duplicateSection);
 
     $('.delete-section-button').bind('click', deleteSection);
     $('.delete-subsection-button').bind('click', deleteSubsection);
@@ -259,6 +260,60 @@ function deleteSection(e) {
     e.preventDefault();
     _deleteItem($(this).parents('section.courseware-section'), 'Section');
 }
+
+function duplicateSection(e) {
+
+   //
+   e.preventDefault();
+
+   //var locator = $('.section-body').data('locator');
+   //var parent = $(this).parents("section.courseware-section").data("locator");
+
+
+  // source_locator = $component.data('locator');
+   //alert('Olá mundo!!!'+locator);
+
+   _duplicateSection($(this).parents('section.courseware-section'), 'Section');
+}
+
+function _duplicateSection($el, type) {
+
+    var locator = $el.data('locator');
+    var parent = $el.data('parent');
+
+//    var dupl = new NotificationView.Mini({
+//                        title: gettext('Duplicando data&hellip;')
+//                    });
+//
+//    dupl.show();
+
+    //alert("Locator" + locator +" Parent: "+ parent);
+
+   // duplicate_source_locator: source_locator
+
+//
+    var dados = {
+        'source_locator': locator,
+        'parent_locator': parent
+    }
+//
+    $.ajax({
+        type: 'PUT',
+        dataType: "json",
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(dados),
+        url: '/duplicatesection/'+ parent,
+        success: function (dt) {
+           // alert("Dados duplicados com sucesso!!!"+dt.ok);
+            location.reload();
+        }
+    });
+}
+
+
+
+
+
 
 function _deleteItem($el, type) {
     var confirm = new PromptView.Warning({

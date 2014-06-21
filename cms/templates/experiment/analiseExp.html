@@ -1,0 +1,28 @@
+<%! from django.utils.translation import ugettext as _ %>
+<%inherit file="../base.html" />
+
+
+<%block name="header_extras">
+<!--<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.4.2/pure-min.css">-->
+<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.4.2/tables-min.css">
+
+</%block>
+
+<%namespace name='static' file='../static_content.html'/>
+<%block name="title">${_("My Experiments")}</%block>
+<%block name="bodyclass">is-signedin course tools view-export</%block>
+
+
+<!-- Analisa o resultado com base em um dado ID do experimento -->
+
+<%block name="content">
+
+ID do usuário ${id}
+
+
+
+
+
+
+
+</%block>
