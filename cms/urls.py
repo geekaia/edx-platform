@@ -90,16 +90,20 @@ urlpatterns += patterns(
     url(r'^settings/advanced/(?P<course_key_string>[^/]+)$', 'advanced_settings_handler'),
     url(r'^textbooks/(?P<course_key_string>[^/]+)$', 'textbooks_list_handler'),
     url(r'^textbooks/(?P<course_key_string>[^/]+)/(?P<textbook_id>\d[^/]*)$', 'textbooks_detail_handler'),
+    # url(r'(?ix)^textbooks/{}/(?P<tid>\d[^/]*)$'.format(parsers.URL_RE_SOURCE), 'textbooks_detail_handler'),
+
 )
+
+
 
 urlpatterns += patterns(
     'experiments.views',
         #url(r'(?ix)^experiments', 'experiments_handler', name='experiments_handler'),
-    url(r'(?ix)^experiments/{}$'.format(parsers.URL_RE_SOURCE), 'experiments_handler'),
-    # url(r'(?ix)^viewexperiment/(?P<idExp>\d+)/$', 'analise_experiment'),
-    url(r'(?ix)^duplicatesection/{}$'.format(parsers.URL_RE_SOURCE), 'block_clone_handler'),
-
-    url(r'(?ix)^experiments/{}(/)?(?P<idExp>.+)?$'.format(parsers.URL_RE_SOURCE), "EmailsExp"),
+    url(r'^experiments/(?P<course_key_string>[^/]+)$', 'experiments_handler'),
+    # # url(r'(?ix)^viewexperiment/(?P<idExp>\d+)/$', 'analise_experiment'),
+    # url(r'(?ix)^duplicatesection/{}$'.format(parsers.URL_RE_SOURCE), 'block_clone_handler'),
+    #
+    # url(r'(?ix)^experiments/{}(/)?(?P<idExp>.+)?$'.format(parsers.URL_RE_SOURCE), "EmailsExp"),
 
 )
 
