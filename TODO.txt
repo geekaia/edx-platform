@@ -1,0 +1,7 @@
+CMS  
+
+   -- Port CMS new edX 
+   -- Configure IP  to preview in LMS  
+ 
+LMS
+   -- Port LMS to new edX
