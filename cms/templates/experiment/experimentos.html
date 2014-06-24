@@ -1,10 +1,10 @@
-<%! from django.utils.translation import ugettext as _ %>
 <%inherit file="../base.html" />
-
+<%def name="online_help_token()"><% return "experiments" %></%def>
+<%namespace name='static' file='../static_content.html'/>
 
 <%!
   from django.utils.translation import ugettext as _
-  from django.core.urlresolvers import reverse
+  import json
 %>
 
 <%block name="header_extras">
@@ -13,18 +13,12 @@
 
 </%block>
 
-<%namespace name='static' file='../static_content.html'/>
-<%block name="title">${_("My Experiments")}</%block>
+<%block name="title">${_("Course Experiments")}</%block>
 <%block name="bodyclass">is-signedin course tools view-export</%block>
-
-
 
 <%block name="content">
 
-
  <div id="content">
-
-
     <div class="wrapper-mast wrapper">
       <header class="mast has-subtitle">
         <h1 class="page-header">
@@ -33,10 +27,6 @@
         </h1>
       </header>
     </div>
-
-
-        <!-- CSS goes in the document HEAD or added to your external stylesheet -->
-
 
     <div class="wrapper-content wrapper">
         <section class="content">
@@ -52,7 +42,7 @@
                     </thead>
 
                     <tbody>
-                    % for exp in explist:
+               % for exp in explist:
                         <tr>
                             <td>${exp.descricao}</td>
                             <td>${exp.course}</td>
@@ -62,7 +52,7 @@
                                   <li class="action-item action-view-results">
                                         <a href="${lms_link.split('jump_to')[0]}expAnalise/${exp.id}/" class="button action-primary action">${_("View Results")}</a>
                                         <br />
-                                        <a href="${location.url_reverse('experiments')}/${exp.id}" class="button action-primary action">${_("Emails")}</a>
+                                        <a href="experiments/${exp.id}" class="button action-primary action">${_("Emails")}</a>
 
                                   </li>
 
@@ -70,44 +60,19 @@
                                 </div>
                             </td>
                         </tr>
-                    % endfor
-                   </tbody>
+               % endfor
+
+    </tbody>
                 </table>
 
-                <!--<h1> Curso:  ${curso} </h1>-->
-                <!--<br />-->
-                <!--Tipo  ${tipo}-->
-                <!--<h1> Location: ${location} </h1>-->
-                <!--<br />-->
-
-                <!--<h1> Old_location:  ${old_location} </h1>-->
-                <!--<br />-->
-
-                <!--<h1> Course_module ${course_module} </h1>-->
-                <!--<br />-->
-
-                <!--Agora devo criar um CRUD com uma tabela dos experimentos do edX <br />-->
-                <!--Minha primeira página em HTML do edX-->
-
-
-                <!--<br />-->
-                <!--Nome: <div id="nome"> </div>-->
+      <!--Nome: <div id="nome"> </div>-->
             </article>
         </section>
     </div>
 
-
-
-
-
  </div>
 
-
-
 </%block>
-
-
-
 
 
 

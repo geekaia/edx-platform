@@ -1,10 +1,12 @@
-#coding: utf-8
+# -*- coding: utf-8 -*-
+
 from __future__ import absolute_import
 
 from django.views.decorators.http import require_GET
 import logging
 from uuid import uuid4
 from django.core.exceptions import PermissionDenied
+
 from django.contrib.auth.decorators import login_required
 from django.utils.translation import ugettext as _
 from django.views.decorators.http import require_http_methods
@@ -14,7 +16,7 @@ from edxmako.shortcuts import render_to_response
 from django_future.csrf import ensure_csrf_cookie
 from xmodule.modulestore.django import modulestore, loc_mapper
 from xmodule.modulestore.inheritance import own_metadata
-from xmodule.modulestore.locator import BlockUsageLocator
+# from xmodule.modulestore.locator import BlockUsageLocator
 from xmodule.modulestore import Location
 from util.json_request import expect_json, JsonResponse
 from contentstore.utils import get_modulestore, get_lms_link_for_item
@@ -33,6 +35,11 @@ from experiments.models import *
 from django.contrib.auth.decorators import login_required
 
 
+# New EDX
+from opaque_keys.edx.keys import UsageKey, CourseKey
+
+
+
 # from contentstore.utils import (
 #     get_lms_link_for_item, add_extra_panel_tab, remove_extra_panel_tab,
 #     get_modulestore)
@@ -45,7 +52,7 @@ log = logging.getLogger(__name__)
 @require_GET
 @ensure_csrf_cookie
 @login_required
-def EmailsExp(request,  tag=None, package_id=None, branch=None, version_guid=None, block=None, idExp=None):
+def EmailsExp(request,  course_key_string, idExp=None):
 
         response = HttpResponse(content_type='text/csv; charset=utf-8')
         response['Content-Disposition'] = 'attachment; filename="relatorio2.csv"'
@@ -96,45 +103,24 @@ def EmailsExp(request,  tag=None, package_id=None, branch=None, version_guid=Non
 @require_GET
 @ensure_csrf_cookie
 @login_required
-def experiments_handler(request, tag=None, package_id=None, branch=None, version_guid=None, block=None):
-    # Load the context
+def experiments_handler(request, course_key_string):
+    print "course_key_string: ", course_key_string
+    usage_key = CourseKey.from_string(course_key_string)
 
-    location = BlockUsageLocator(package_id=package_id, branch=branch, version_guid=version_guid, block_id=block)
-
-    if not has_course_access(request.user, location):
+    if not has_course_access(request.user, usage_key):
         raise PermissionDenied()
 
+    course_module = modulestore().get_course(usage_key, depth=3)
 
-    tipo  = type(location)
-
-    old_location = loc_mapper().translate_locator_to_location(location)
-
-    #old_location = loc_mapper().translate_locator_to_location("IFMTX.INFO201.2014_C2/branch/draft/block/chapterc7d")
-
-    #old_location = loc_mapper().translate_locator_to_location()
-    #course_module = modulestore().get_item(old_location) # IFMTX.INFO201.2014_C2/branch/draft/block/chapterc7d
-    course_module = modulestore().get_item(old_location)
-
+    # Lista dos Experimentos
     expList = ExperimentDefinition.objects.filter(userTeacher=request.user)
-
-
-    lms_link = get_lms_link_for_item(old_location)
-
-
-    curso='Meu primeiro curso'
-
+    lms_link = get_lms_link_for_item(course_module.location)
 
 
     return render_to_response('experiment/experimentos.html', {
-            'curso': curso,
-            'tipo': tipo,
-            'explist': expList,
-            'location': location,
-            # 'expsUsrsInfos': expsUsrsInfos,
             'lms_link': lms_link,
-            'old_location': old_location,
-            'course_module':course_module,
-            'context_course': course_module
+            'explist': expList,
+            'context_course': course_module # Se não tiver essa variável não carregará o menu
         })
 
 
@@ -143,87 +129,75 @@ def experiments_handler(request, tag=None, package_id=None, branch=None, version
 @ensure_csrf_cookie
 @require_http_methods(("GET", "PUT", "POST"))
 @expect_json
-def block_clone_handler(request, tag=None, package_id=None, branch=None, version_guid=None, block=None):
+def block_clone_handler(request, course_key_string):
 
     if request.method in ('PUT', 'POST'):
         #  Get location Course com base no valor passado pelo Json
-        locatorCurso = BlockUsageLocator(request.json['parent_locator'])
-        locatorSection = BlockUsageLocator(request.json['source_locator'])
-
-        print "<<<<<<<< ------------------- >>>>>>>>>>>>"
-        print "    Usuário da requisição: ", request.user
-        print "<<<<<<<< ------------------- >>>>>>>>>>>>"
+        locatorCursokey = UsageKey.from_string(request.json['parent_locator'])
+        locatorSectionKey = UsageKey.from_string(request.json['source_locator'])
 
 
-        if not has_course_access(request.user, locatorCurso):
-            raise PermissionDenied()
-
-        #Returns an old style Location for the given Locator if there's an appropriate entry in the
-        #mapping collection.
-        course_location = loc_mapper().translate_locator_to_location(locatorCurso)
-        sectionFind_location = loc_mapper().translate_locator_to_location(locatorSection)
-
-
-        # Verifica se a localização do curso é Nula, caso seja nula, irá disparar uma excessão
-        if course_location is None:
+        if not has_course_access(request.user, locatorSectionKey):
             raise PermissionDenied()
 
 
         # Pesquisa no banco de dados o Curso do qual duplicará os módulos
-        course = modulestore().get_item(course_location, depth=3)
+        course = modulestore().get_item(locatorCursokey, depth=3)
 
-
-        print "sectionToDuplicate: ", locatorSection
-        print "Location url: ", course
+        #
+        # print "sectionToDuplicate: ", locatorSectionKey
+        # print "Location url: ", course
 
         # Print sections available
 
         sections = course.get_children()
 
-
         print "<<<<<<<<<<<  Seções do curso   >>>>>>>"
 
         quantidade = 0
         for section in sections:
-
-            section_locator = loc_mapper().translate_location(course.location.course_id, section.location, False, True)
+            # section_locator = loc_mapper().translate_location(course.location.course_id, section.location, False, True)
             print "<<<<<<<<<<< --------------->>>>>>>"
-            print "Seção: ", section_locator
+            # print "Seção: ", section_locator
+            # print "section: ", section
+            print "section: LOCATION    ", section.location
 
 
-            print "Seção Find: ", locatorSection # Confusão translate_location pega o locator e locator_to_location pega o location
+            print "Seção Find: ", locatorSectionKey # Confusão translate_location pega o locator e locator_to_location pega o location
             print "<<<<<<<<<<< --------------->>>>>>>"
 
-            if section_locator == locatorSection:
-                print "Eu achei o módulo que será duplicado , ", sectionFind_location
+            if locatorSectionKey == section.location:
+                print "Acrei o caraio "
+            #     print "Eu achei o módulo que será duplicado , ", sectionFind_location
 
 
-                # Cria uma subsection
+    #             # Cria uma subsection
+    #
+                NewLocatorItemSection = create_item(locatorCursokey, 'chapter', section.display_name_with_default, request)
 
-                NewLocatorItemSection = create_item(locatorCurso, 'chapter', section.display_name_with_default, request)
 
-
+    #
                 print "New Location item: ", unicode(NewLocatorItemSection)
-                print "URL name: ", section.url_name
-
-
-
+    #             print "URL name: ", section.url_name
+    #
+    #
+    #
                 print "section.start: ", section.start
                 print "section locator: ", NewLocatorItemSection
-
-                # tem que Mudar para HomeWork, ou qualquer tipo que eu definir
-                SectionLocation = loc_mapper().translate_locator_to_location(NewLocatorItemSection)
-
-                print "Course Location: ", SectionLocation
-                # old_location = course_location.replace(category='course_info', name=block)
-                #
-                #
-                descript = get_modulestore(SectionLocation).get_item(SectionLocation)
+    #
+    #             # tem que Mudar para HomeWork, ou qualquer tipo que eu definir
+                SectionLocation =  NewLocatorItemSection
+    #
+                print "Course Location: ", NewLocatorItemSection
+    #             # old_location = course_location.replace(category='course_info', name=block)
+    #             #
+    #             #
+                descript = get_modulestore(NewLocatorItemSection).get_item(NewLocatorItemSection)
                 print "Descript: ", descript
-
-                # Start Value
-                storeSection = get_modulestore(SectionLocation)
-
+    #
+    #             # Start Value
+                storeSection = get_modulestore(NewLocatorItemSection)
+    #
                 try:
                     existing_item = storeSection.get_item(SectionLocation)
 
@@ -236,9 +210,7 @@ def block_clone_handler(request, tag=None, package_id=None, branch=None, version
                         storeSection.update_item(existing_item, request.user.id)
 
                 except:
-                    print "Deu erro"
-
-
+                    print "Start Date and end Date"
 
 
                 # URL: ${section.url_name}
@@ -264,42 +236,42 @@ def block_clone_handler(request, tag=None, package_id=None, branch=None, version
                 now = datetime.datetime.now()
                 exp.descricao='MyExperiment %s ' % now
                 exp.save()
-
+    #
                 # Define a primeira versão do experimento
                 opcExp = OpcoesExperiment()
                 opcExp.experimento = exp
-                opcExp.sectionExp = "%s" % locatorSection
+                opcExp.sectionExp = "%s" % locatorSectionKey
                 opcExp.sectionExp_url = "%s" % section.url_name
-
-                # course = modulestore().get_item(course_location, depth=3)
-                # print "sectionToDuplicate: ", locatorSection
-                # print "Location url: ", course.url_name
-
+    #
+    #             # course = modulestore().get_item(course_location, depth=3)
+    #             # print "sectionToDuplicate: ", locatorSection
+    #             # print "Location url: ", course.url_name
+    #
                 opcExp.version = 'A'
                 opcExp.save()
-
+    #
                 # Define a segunda versão do experimento
                 opcExp2 = OpcoesExperiment()
                 opcExp2.experimento = exp
                 opcExp2.sectionExp = "%s" % NewLocatorItemSection
-                opcExp2.sectionExp_url = '%s' % getURLSection(course_location, NewLocatorItemSection)
+                opcExp2.sectionExp_url = '%s' % getURLSection(locatorCursokey, NewLocatorItemSection)
                 opcExp2.version = 'B'
                 opcExp2.save()
-
-                # for dt in ExperimentDefinition.objects.all():
-                #     print "Course: ", dt.course, " status: ", dt.status
-
-                # print "Count: ", ExperimentDefinition.objects.all().count()
-
-
+    #
+    #             # for dt in ExperimentDefinition.objects.all():
+    #             #     print "Course: ", dt.course, " status: ", dt.status
+    #
+    #             # print "Count: ", ExperimentDefinition.objects.all().count()
+    #
+    #
                 # PENSAR EM UM PASSO ADICIONAL, QUE AO REMOVER TAMBÉM REMOVA O EXPERIMENTO REMEMBER CRUD ???????????
-
+    #
                 for subsection in subsections:
-                    subsection_locator = loc_mapper().translate_location(course.location.course_id, subsection.location, False, True)
 
+    #
                     print
                     print
-                    print "Clonando SubSeção: ", subsection_locator
+                    print "Clonando SubSeção: ", subsection.location
 
                     NewLocatorItemSubsection = create_item(NewLocatorItemSection, 'sequential', subsection.display_name_with_default, request)
 
@@ -313,22 +285,22 @@ def block_clone_handler(request, tag=None, package_id=None, branch=None, version
                     print "Subsection locator: ", NewLocatorItemSubsection
 
                     # tem que Mudar para HomeWork, ou qualquer tipo que eu definir
-                    subLocation = loc_mapper().translate_locator_to_location(NewLocatorItemSubsection)
+                    # subLocation = loc_mapper().translate_locator_to_location(NewLocatorItemSubsection)
 
-                    print "Course Location: ", subLocation
+                    # print "vert Location: ", subLocation
                     # old_location = course_location.replace(category='course_info', name=block)
                     #
                     #
-                    descript = get_modulestore(subLocation).get_item(subLocation)
+                    descript = get_modulestore(NewLocatorItemSubsection).get_item(NewLocatorItemSubsection)
                     print "Descript: ", descript
 
                     CourseGradingModel.update_section_grader_type(descript, subsection.format, request.user)
 
                     # Start Value
-                    storeSection = get_modulestore(subLocation)
+                    storeSection = get_modulestore(NewLocatorItemSubsection)
 
                     try:
-                        existing_item = storeSection.get_item(subLocation)
+                        existing_item = storeSection.get_item(NewLocatorItemSubsection)
 
                         field = existing_item.fields['start']
 
@@ -340,39 +312,34 @@ def block_clone_handler(request, tag=None, package_id=None, branch=None, version
 
                     except:
                         print "Deu erro"
-
-
-                    #
-
-
-
-
-                    # field.write_to(existing_item, value)
-
-                    # Agora falta o Start Date
-
-                    # CourseGradingModel.update_section_grader_type(existing_item, grader_type, request.user))
-
-
-
-
-                    # # Agora pegarei as configurações do Grading e jogarei para a nova subsection criada
-                    # if grader_type is not None:
-                    #     CourseGradingModel.update_section_grader_type(existing_item, grader_type, request.user))
-
-
+    #
+    #
+    #                 #
+    #
+    #
+    #
+    #
+    #                 # field.write_to(existing_item, value)
+    #
+    #                 # Agora falta o Start Date
+    #
+    #                 # CourseGradingModel.update_section_grader_type(existing_item, grader_type, request.user))
+    #
+    #
+    #
+    #
+    #                 # # Agora pegarei as configurações do Grading e jogarei para a nova subsection criada
+    #                 # if grader_type is not None:
+    #                 #     CourseGradingModel.update_section_grader_type(existing_item, grader_type, request.user))
+    #
+    #
                     # Print all Units
                     for unit in units_Subsection:
-                        unit_locator = loc_mapper().translate_location(course.location.course_id, unit.location, False, True)
 
-
-                        unit_location = loc_mapper().translate_locator_to_location(unit_locator)
-                        # subsection_location = loc_mapper().translate_locator_to_location(subsection_locator)
-                        Newsubsection_location = loc_mapper().translate_locator_to_location(NewLocatorItemSubsection)
 
                         originalState = compute_publish_state(unit)
 
-                        destinationUnit = duplicate_item(Newsubsection_location, unit_location, unit.display_name_with_default, request.user)
+                        destinationUnit = duplicate_item(NewLocatorItemSubsection, unit.location, unit.display_name_with_default, request.user)
 
 
                         # Nesta parte faz-se a leitura se e privado ou publico, se publico, seta a variavel como publico
@@ -427,93 +394,93 @@ def block_clone_handler(request, tag=None, package_id=None, branch=None, version
 
                         except:
                             print "Erro ao setar publico"
-
-
-
-                        # Agora tem que pegar
-
-
-                        # Agora tem que mudar a visi
-
-
-                        # Agora tem que colocar todos os elementos para o público
-
-
-                        #
-                        #
-                        # # Get metadata and Data
-                        # metadatacomp, datacomp, category = getMetadata(
-                        #     subsection_location,
-                        #     unit_location,
-                        #     Newsubsection_location,
-                        #     unit.display_name_with_default,
-                        #     request.user
-                        # )
-
-
-
-
-
-
-                        # NewLocatorItem = create_item(NewLocatorItemSubsection, 'vertical', unit.display_name_with_default, request)#, metadatacomp, datacomp)
-                        #
-                        # unityComponents = unit.get_children()
-                        #
-                        #
-                        #
-                        #
-                        #
-                        # for comp in unityComponents:
-                        #
-                        #     break
-                        #
-                        #     print "Componente"
-                        #
-                        #     comp_locator = loc_mapper().translate_location(course.location.course_id, comp.location, False, True)
-                        #      # course_location = loc_mapper().translate_locator_to_location(parent_locator, get_course=True)
-                        #
-                        #     com_location = loc_mapper().translate_locator_to_location(comp_locator)
-                        #     unit_location = loc_mapper().translate_locator_to_location(unit_locator)
-                        #     NewLocatorItemLocator = loc_mapper().translate_locator_to_location(NewLocatorItem)
-                        #
-                        #
-                        #
-                        #     metadatacomp, datacomp, category = getMetadata(
-                        #         unit_location,
-                        #         com_location,
-                        #         NewLocatorItemLocator,
-                        #         comp.display_name,
-                        #         request.user
-                        #     )
-                        #
-                        #     create_item(NewLocatorItem, category, comp.display_name_with_default, request, metadatacomp, datacomp)
-
-
-
-
-                            # course_location = loc_mapper().translate_locator_to_location(BlockUsageLocator(parent_locator), get_course=True)
-                            # dest_locator = loc_mapper().translate_location(course_location.course_id, dest_location, False, True)
-                            #
-                            # # return JsonResponse({"locator": unicode(dest_locator)})
-
-
-                # Finaliza o laço
-
-                # Agora vem a definição do Experimento
-
-
-                break
-
-
     #
+    #
+    #
+    #                     # Agora tem que pegar
+    #
+    #
+    #                     # Agora tem que mudar a visi
+    #
+    #
+    #                     # Agora tem que colocar todos os elementos para o público
+    #
+    #
+    #                     #
+    #                     #
+    #                     # # Get metadata and Data
+    #                     # metadatacomp, datacomp, category = getMetadata(
+    #                     #     subsection_location,
+    #                     #     unit_location,
+    #                     #     Newsubsection_location,
+    #                     #     unit.display_name_with_default,
+    #                     #     request.user
+    #                     # )
+    #
+    #
+    #
+    #
+    #
+    #
+    #                     # NewLocatorItem = create_item(NewLocatorItemSubsection, 'vertical', unit.display_name_with_default, request)#, metadatacomp, datacomp)
+    #                     #
+    #                     # unityComponents = unit.get_children()
+    #                     #
+    #                     #
+    #                     #
+    #                     #
+    #                     #
+    #                     # for comp in unityComponents:
+    #                     #
+    #                     #     break
+    #                     #
+    #                     #     print "Componente"
+    #                     #
+    #                     #     comp_locator = loc_mapper().translate_location(course.location.course_id, comp.location, False, True)
+    #                     #      # course_location = loc_mapper().translate_locator_to_location(parent_locator, get_course=True)
+    #                     #
+    #                     #     com_location = loc_mapper().translate_locator_to_location(comp_locator)
+    #                     #     unit_location = loc_mapper().translate_locator_to_location(unit_locator)
+    #                     #     NewLocatorItemLocator = loc_mapper().translate_locator_to_location(NewLocatorItem)
+    #                     #
+    #                     #
+    #                     #
+    #                     #     metadatacomp, datacomp, category = getMetadata(
+    #                     #         unit_location,
+    #                     #         com_location,
+    #                     #         NewLocatorItemLocator,
+    #                     #         comp.display_name,
+    #                     #         request.user
+    #                     #     )
+    #                     #
+    #                     #     create_item(NewLocatorItem, category, comp.display_name_with_default, request, metadatacomp, datacomp)
+    #
+    #
+    #
+    #
+    #                         # course_location = loc_mapper().translate_locator_to_location(BlockUsageLocator(parent_locator), get_course=True)
+    #                         # dest_locator = loc_mapper().translate_location(course_location.course_id, dest_location, False, True)
+    #                         #
+    #                         # # return JsonResponse({"locator": unicode(dest_locator)})
+    #
+    #
+    #             # Finaliza o laço
+    #
+    #             # Agora vem a definição do Experimento
+    #
+    #
+    #             break
+    #
+    #
+    # #
     dataR = {'ok': quantidade }
-
+    #
     return JsonResponse(dataR)
-
-
-
-
-def getURLSection( course_location, loc):
+#
+#
+#
+#
+def getURLSection(course_location, loc):
 
     curso = modulestore().get_item(course_location, depth=3)
     sections = curso.get_children()
@@ -521,19 +488,15 @@ def getURLSection( course_location, loc):
     print "LOC ", loc
 
     for section in sections:
-        section_locator = loc_mapper().translate_location(curso.location.course_id, section.location, False, True)
 
-
-        print "Section: ", section_locator
-
-        if section_locator == loc:
+        if section.location == loc:
             print "Url Name1: ", section.url_name
 
             return section.url_name
 
     # Verifica se já foi atribuido uma url_name
-
-
+#
+#
 def getMetadata(parent_location, duplicate_source_location, parent_destination, display_name=None, user=None):
     """
     Duplicate an existing xblock as a child of the supplied parent_location.
@@ -565,87 +528,12 @@ def getMetadata(parent_location, duplicate_source_location, parent_destination, 
 
     return duplicate_metadata, source_item.data if hasattr(source_item, 'data') else None, category
 
+#
+def create_item(parent_location, category, display_name, request, dt_metadata=None, datacomp=None):
 
 
-# def duplicate_item(parent_location, duplicate_source_location, parent_destination, display_name=None, user=None):
-#     """
-#     Duplicate an existing xblock as a child of the supplied parent_location.
-#     """
-#
-#     # print "parent_location: ", parent_location
-#     # print "duplicate_source_location: ", duplicate_source_location
-#     # print "parent_destination: ", parent_destination
-#     # print
-#
-#
-#     print "Dp primeiro"
-#     store = get_modulestore(duplicate_source_location)
-#
-#     print "Dp segundo -- store: ", store
-#     source_item = store.get_item(duplicate_source_location)
-#
-#     print "Dp terceiro -- Source-item: ", source_item
-#     # Change the blockID to be unique.
-#     dest_location = parent_destination.replace(name=uuid4().hex)
-#
-#     print "Dp quarto -- Dest_location: ", dest_location
-#     category = duplicate_source_location.category
-#
-#     print "Dp quinto -- Categoria: ", category
-#
-#     # Update the display name to indicate this is a duplicate (unless display name provided).
-#     duplicate_metadata = own_metadata(source_item)
-#
-#     print "Dp sexto -- Duplicate_metadata: ", duplicate_metadata
-#
-#     if display_name is not None:
-#         duplicate_metadata['display_name'] = display_name
-#
-#     print "Dp sétimo -- Variageis modulestore -- categoria: ", category, 'dest_location: ', dest_location, ' definition_data: ', source_item.data if hasattr(source_item, 'data') else None
-#     print "metadata= ", duplicate_metadata, " system= ", source_item.runtime
-#
-#     get_modulestore(category).create_and_save_xmodule(
-#         dest_location,
-#         definition_data=source_item.data if hasattr(source_item, 'data') else None,
-#         metadata=duplicate_metadata,
-#         system=source_item.runtime,
-#     )
-#
-#     print "Dp oitavo "
-#     dest_module = get_modulestore(category).get_item(dest_location)
-#     print "Dp nono -- Dest Module: ", dest_module
-#     # Children are not automatically copied over (and not all xblocks have a 'children' attribute).
-#     # Because DAGs are not fully supported, we need to actually duplicate each child as well.
-#     if source_item.has_children:
-#         dest_module.children = []
-#         for child in source_item.children:
-#             dupe = duplicate_item(dest_location, Location(child), parent_destination, user=user)
-#             print "Dupe.url: ", dupe.url()
-#             dest_module.children.append(dupe.url())
-#
-#         get_modulestore(dest_location).update_item(dest_module, user.id if user else None)
-#     print "Dp décimo"
-#
-#     if not 'detached' in source_item.runtime.load_block_type(category)._class_tags:
-#         parent = get_modulestore(parent_location).get_item(parent_location)
-#         # If source was already a child of the parent, add duplicate immediately afterward.
-#         # Otherwise, add child to end.
-#         if duplicate_source_location.url() in parent.children:
-#             source_index = parent.children.index(duplicate_source_location.url())
-#             parent.children.insert(source_index + 1, dest_location.url())
-#         else:
-#             parent.children.append(dest_location.url())
-#         get_modulestore(parent_location).update_item(parent, user.id if user else None)
-#
-#     print "Dp 11"
-
-def create_item(parent_locator, category, display_name, request, dt_metadata=None, datacomp=None):
     """View for create items."""
 
-    print "Locator Parent ", parent_locator
-    print "-- Primeiro -- "
-    parent_location = loc_mapper().translate_locator_to_location(parent_locator)
-    print "Parent_logation: ", parent_location
     print "-- Segundo -- "
     parent = get_modulestore(category).get_item(parent_location)
     print "-- Terceiro -- "
@@ -655,55 +543,65 @@ def create_item(parent_locator, category, display_name, request, dt_metadata=Non
 
     if not has_course_access(request.user, parent_location):
         raise PermissionDenied()
-
+    print "-- Quinto -- "
     # get the metadata, display_name, and definition from the request
 
     metadata = {}
     data = None
 
+
     if dt_metadata is not None:
         metadata = dt_metadata
         data = datacomp
-
+    print "-- Sexto -- "
 
     if display_name is not None:
         metadata['display_name'] = display_name
 
-    print "-- Quinto -- "
+    print "-- Sétimo -- "
     get_modulestore(category).create_and_save_xmodule(
         dest_location,
         definition_data=data,
         metadata=metadata,
         system=parent.runtime,
     )
-    print "-- Sexto -- "
+    print "-- oitavo -- "
 
     # # TODO replace w/ nicer accessor
     if not 'detached' in parent.runtime.load_block_type(category)._class_tags:
-        parent.children.append(dest_location.url())
-        print "-- Sétimo -- "
+        parent.children.append(dest_location) # Vamos ver se fuciona
+        print "-- nono -- "
         get_modulestore(parent.location).update_item(parent, request.user.id)
-        print "-- Oitavo -- "
+        print "-- décimo -- "
 
-    print "!!!!!!!!!!!!!!!! parent_locator: ", parent_locator
-    course_location = loc_mapper().translate_locator_to_location(parent_locator, get_course=True)
-    print "!!!!!!!!!!!!!!!! course_location: ", course_location
-    locator = loc_mapper().translate_location(course_location.course_id, dest_location, False, True)
 
-    return locator
+    return dest_location
 
 
 
 
 
 
-# comp_locator = loc_mapper().translate_location(course.location.course_id, comp.location, False, True)
-# fonte = unit_location # parent_locator = BlockUsageLocator(request.json['parent_locator'])
-# destino = NewLocationItem # Unit duplicada da Fonte
-
-# duplicate_source_locator = comp_locator
 
 
+
+
+
+
+
+#
+#
+#
+#
+#
+#
+# # comp_locator = loc_mapper().translate_location(course.location.course_id, comp.location, False, True)
+# # fonte = unit_location # parent_locator = BlockUsageLocator(request.json['parent_locator'])
+# # destino = NewLocationItem # Unit duplicada da Fonte
+#
+# # duplicate_source_locator = comp_locator
+#
+#
 def duplicate_item(parent_location, duplicate_source_location, display_name=None, user=None):
     """
     Duplicate an existing xblock as a child of the supplied parent_location.
@@ -743,21 +641,22 @@ def duplicate_item(parent_location, duplicate_source_location, display_name=None
     if source_item.has_children:
         dest_module.children = []
         for child in source_item.children:
-            dupe = duplicate_item(dest_location, Location(child), user=user)
-            dest_module.children.append(dupe.url())
+            # dupe = duplicate_item(dest_location, Location(child), user=user)
+            dupe = duplicate_item(dest_location, child, user=user)
+            dest_module.children.append(dupe)
         get_modulestore(dest_location).update_item(dest_module, user.id if user else None)
 
     if not 'detached' in source_item.runtime.load_block_type(category)._class_tags:
         parent = get_modulestore(parent_location).get_item(parent_location)
         # If source was already a child of the parent, add duplicate immediately afterward.
         # Otherwise, add child to end.
-        if duplicate_source_location.url() in parent.children:
-            source_index = parent.children.index(duplicate_source_location.url())
-            parent.children.insert(source_index + 1, dest_location.url())
+        if duplicate_source_location in parent.children:
+            source_index = parent.children.index(duplicate_source_location)
+            parent.children.insert(source_index + 1, dest_location)
         else:
-            parent.children.append(dest_location.url())
+            parent.children.append(dest_location)
         get_modulestore(parent_location).update_item(parent, user.id if user else None)
 
     return dest_location
-
-
+#
+#

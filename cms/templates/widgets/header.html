@@ -3,7 +3,6 @@
   from django.core.urlresolvers import reverse
   from django.utils.translation import ugettext as _
   from contentstore.context_processors import doc_url
-  from xmodule.modulestore.django import loc_mapper # Depois tenho que ver como faz para remover
 %>
 <%page args="online_help_token"/>
 
@@ -29,8 +28,9 @@
             grading_url = reverse('contentstore.views.grading_handler', kwargs={'course_key_string': unicode(course_key)})
             advanced_settings_url = reverse('contentstore.views.advanced_settings_handler', kwargs={'course_key_string': unicode(course_key)})
             tabs_url = reverse('contentstore.views.tabs_handler', kwargs={'course_key_string': unicode(course_key)})
-            location = loc_mapper().translate_location(ctx_loc.course_id, ctx_loc, False, True)
-            experiments_url = location.url_reverse('experiments')
+            experiments_url =  reverse('experiments.views.experiments_handler', kwargs={'course_key_string': unicode(course_key)})
+
+
       %>
       <h2 class="info-course">
         <span class="sr">${_("Current Course:")}</span>
@@ -107,10 +107,10 @@
                   <li class="nav-item nav-course-tools-export">
                     <a href="${export_url}">${_("Export")}</a>
                   </li>
-
                   <li class="nav-item nav-course-tools-experimentos'">
                       <a href="${experiments_url}"> ${_('Experiments')} </a>
                   </li>
+
                   % if settings.FEATURES.get('ENABLE_EXPORT_GIT') and context_course.giturl:
                   <li class="nav-item nav-course-tools-export-git">
                     <a href="${reverse('export_git', kwargs=dict(course_key_string=unicode(course_key)))}">${_("Export to Git")}</a>
