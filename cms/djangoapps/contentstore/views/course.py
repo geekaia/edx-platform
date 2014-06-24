@@ -275,6 +275,7 @@ def course_index(request, course_key):
             CourseGradingModel.fetch(course_key).graders
         ),
         'new_section_category': 'chapter',
+        'new_subsection_category': 'sequential',
         'new_unit_category': 'vertical',
         'category': 'vertical'
     })
