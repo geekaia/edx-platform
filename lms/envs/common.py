@@ -1262,6 +1262,10 @@ INSTALLED_APPS = (
 
     # Monitoring functionality
     'monitoring',
+
+    'experiments',
+    'experimentslms',
+
 )
 
 ######################### MARKETING SITE ###############################

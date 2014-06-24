@@ -78,6 +78,13 @@ urlpatterns += (
     url(r'^course_modes/', include('course_modes.urls')),
 )
 
+urlpatterns += (
+     # url(r'^/expAnalise/(?P<idExp>\d+)/$','experimentslms.views.expAnalise', name="expAnalise"),
+     url(r'^courses/(?P<course_id>[^/]+/[^/]+/[^/]+)/expAnalise/(?P<idExp>\d+)/$',  'experimentslms.views.expAnalise', name="expAnalise"),
+
+)
+
+
 
 js_info_dict = {
     'domain': 'djangojs',

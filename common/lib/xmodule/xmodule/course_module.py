@@ -782,9 +782,7 @@ class CourseDescriptor(CourseFields, SequenceDescriptor):
 
         for c in self.get_children():
 
-            # print "USER REQUEST asldfjlajsdlfjlasdjfl: ", self.userRequest, " URL: ",
-            # Agora veremos se a coisa ira funcionar
-            url = c.location.url().split('/')[len(c.location.url().split('/'))-1]
+            url = c.url_name
 
             pular=False
 

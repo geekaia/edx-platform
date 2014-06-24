@@ -91,29 +91,28 @@ def EmailsExp(request,  course_key_string, idExp=None):
 
             return response
 
-
-
         except:
             print "Erro ao pegar o exp"
-
-
-
 
 
 @require_GET
 @ensure_csrf_cookie
 @login_required
 def experiments_handler(request, course_key_string):
-    print "course_key_string: ", course_key_string
     usage_key = CourseKey.from_string(course_key_string)
+
+    # print "Course Location: ", courseKey
 
     if not has_course_access(request.user, usage_key):
         raise PermissionDenied()
 
     course_module = modulestore().get_course(usage_key, depth=3)
 
+    print "Course location: ", course_module.location
+
+
     # Lista dos Experimentos
-    expList = ExperimentDefinition.objects.filter(userTeacher=request.user)
+    expList = ExperimentDefinition.objects.filter(userTeacher=request.user, course=course_module.location)
     lms_link = get_lms_link_for_item(course_module.location)
 
 

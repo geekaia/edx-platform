@@ -14,6 +14,7 @@
 
 <%!
     from django.core.urlresolvers import reverse
+    from experiments.utils import VerABprint
 %>
 
 <%!
@@ -70,7 +71,12 @@ from django.conf import settings
 
       <div class="chapters">
         %for chapter in courseware_summary:
+        <% imprimir = VerABprint(chapter['url_name'], user) %>
         %if not chapter['display_name'] == "hidden":
+
+        % if imprimir:
+
+
         <section>
           <h2>${ chapter['display_name'] }</h2>
 
@@ -121,13 +127,12 @@ from django.conf import settings
                   <h3 class="no-scores"> ${_("No problem scores in this section")} </h3>
                 %endif
               </div>
-
-
             </div> <!--End section-->
             %endfor
           </div> <!--End sections-->
         </section> <!--End chapter-->
         %endif
+        % endif  <!-- End Experiment print-->
         %endfor
       </div> <!--End chapters-->
 
