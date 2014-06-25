@@ -4,3 +4,6 @@
 {"inputs": {"userid": 1}, "name": "UrlExperiment", "checksum": "45615b9b", "params": {"URL": "4c54f497880e4ae28c9281a08634d14f"}, "time": 1403642045, "salt": "UrlExperiment", "event": "exposure"}
 {"inputs": {"userid": 1}, "name": "UrlExperiment", "checksum": "45615b9b", "params": {"URL": "4c54f497880e4ae28c9281a08634d14f"}, "time": 1403642298, "salt": "UrlExperiment", "event": "exposure"}
 {"inputs": {"userid": 3}, "name": "UrlExperiment", "checksum": "45615b9b", "params": {"URL": "dc5466cabb254c529a5b25854547051d"}, "time": 1403642634, "salt": "UrlExperiment", "event": "exposure"}
+{"inputs": {"userid": 3}, "name": "UrlExperiment", "checksum": "45615b9b", "params": {"URL": "1fe9a57242fc49e489d8332dc0e021ed"}, "time": 1403657931, "salt": "UrlExperiment", "event": "exposure"}
+{"inputs": {"userid": 2}, "name": "UrlExperiment", "checksum": "45615b9b", "params": {"URL": "f732c23a33cd477b9a3ecbb579069080"}, "time": 1403658040, "salt": "UrlExperiment", "event": "exposure"}
+{"inputs": {"userid": 1}, "name": "UrlExperiment", "checksum": "45615b9b", "params": {"URL": "f732c23a33cd477b9a3ecbb579069080"}, "time": 1403658334, "salt": "UrlExperiment", "event": "exposure"}
