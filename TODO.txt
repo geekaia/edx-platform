@@ -1,7 +1,7 @@
 CMS  
 
-   -- Port CMS new edX 
+   -- Port CMS new edX  - Ok
    -- Configure IP  to preview in LMS  
  
 LMS
-   -- Port LMS to new edX
+   -- Port LMS to new edXi - OK 
