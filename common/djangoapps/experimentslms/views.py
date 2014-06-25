@@ -76,15 +76,9 @@ def expAnalise(request, course_id,  idExp):
             # if usuario.userStudent.username != 'staff':
             #     continue
 
-            print "Usuario: ", usuario.userStudent, " versionExp: ", usuario.versionExp.sectionExp, "Curso id: ", usuario.versionExp.sectionExp.split('/')[0].replace('.','/')
+            print "Usuario: ", usuario.userStudent, " versionExp: ", usuario.versionExp.sectionExp, "Curso id: ", usuario.versionExp.sectionExp
             print "Exp URL: ", usuario.versionExp.sectionExp_url
-            # request.user = usuario.userStudent
-            # course = get_course_with_access(request.user, usuario.versionExp.sectionExp.split('/')[0].replace('.', '/'), 'load', depth=None)
-            # request.user =
-            # request.user = usuario.userStudent
 
-            # with grades.manual_transaction():
-            print "Request.user: ", request.user, "Curso: ", usuario.versionExp.sectionExp.split('/')[0].replace('.', '/')
 
             # course = get_course_by_id(usuario.versionExp.sectionExp.split('/')[0].replace('.', '/'), depth=None)
 
@@ -98,14 +92,15 @@ def expAnalise(request, course_id,  idExp):
             # requestcp.user = usuario.userStudent
 
 
-            courseware_summary = None
+            courseware_summary = []
 
             # Tem que pegar o Score de um módulo específico
             try:
                 courseware_summary = progress(request, course_id, usuario.userStudent.id)
 
             except:
-                courseware_summary = None
+                print "Deu um Erro ao pegar o Courseaware Summary"
+                courseware_summary = []
 
 
             usrprofl=[]

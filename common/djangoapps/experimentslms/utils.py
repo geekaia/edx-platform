@@ -8,6 +8,7 @@ from courseware.courses import get_course_with_access
 from django.http import Http404
 from courseware.access import has_access
 
+from opaque_keys.edx.locations import SlashSeparatedCourseKey
 
 # def progress(request, course_id, student_id=None):
 #     """
@@ -32,10 +33,20 @@ courseware_summary
     print " -------------- "
     print "Request.user: ", request.user, " Course id: ",  course_id, " Student id: ", student_id
     print " -------------- "
+    course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
 
-    course = get_course_with_access(request.user, course_id, 'load', depth=None)
+    print "Course Key: ", course_key
+    print
+
+
+    course = get_course_with_access(request.user, 'load', course_key, depth=None)
+
+    # course = get_course_with_access(request.user, course_id, 'load', depth=None)
     print "PEGUEI O CURSO"
-    staff_access = has_access(request.user, course, 'staff')
+    staff_access = has_access(request.user, 'staff', course)
+    print "Staff Access Course"
+    print
+
 
     if not staff_access:
             raise Http404
@@ -69,9 +80,6 @@ courseware_summary
         print "Informações: "
         # print "Usuario: ", courseware_summary['sections']
         # courseware_summary
-
-
-
 
         print "TAMANHO: ", len(courseware_summary)
         print
