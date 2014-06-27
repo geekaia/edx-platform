@@ -5,3 +5,17 @@ CMS
  
 LMS
    -- Port LMS to new edXi - OK 
+
+Sugestões Ricardo 
+
+Estudar randomizações 
+
+1. proportion
+2. blocking
+3. stratification
+4. factorial
+
+Documentação
+DOC Py
+
+Estudar uma forma de criar backups automáticos

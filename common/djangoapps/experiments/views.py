@@ -116,6 +116,7 @@ def experiments_handler(request, course_key_string):
     lms_link = get_lms_link_for_item(course_module.location)
 
 
+
     return render_to_response('experiment/experimentos.html', {
             'lms_link': lms_link,
             'explist': expList,
