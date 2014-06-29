@@ -35,13 +35,13 @@ class HistoricoQuestoes(models.Model):
 
 
 
-class StrategyPlanout(models.Model):
-    # Strategy: Uniform, WeightedChoice, BernoulliTrial, RandomInteger
-    strategy = models.CharField(max_length=30)
-    # Caso a estrategia seja Weight
-    percent1 = models.IntegerField(blank=True)
-    percent2 = models.IntegerField(blank=True)
-    prob = models.DecimalField(max_digits=1, decimal_places=2, blank=True)
+# class StrategyPlanout(models.Model):
+#     # Strategy: Uniform, WeightedChoice, BernoulliTrial, RandomInteger
+#     strategy = models.CharField(max_length=30)
+#     # Caso a estrategia seja Weight
+#     percent1 = models.IntegerField(blank=True)
+#     percent2 = models.IntegerField(blank=True)
+#     prob = models.DecimalField(max_digits=1, decimal_places=2, blank=True)
 
 
 
