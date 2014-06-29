@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+<select>
+  <option value="UniformChoice">Uniform</option>
+  <option value="WeightedChoice">Proportion</option>
+  <option value="BernoulliTrial">BernoulliTrial</option>
+  <option value="RandomInteger">RandomInteger</option>
+  <option value="Sample">Sample</option>
+</select>
+
+
+<div id="uniform">
+    <form id="UfChoice">
+        <button type="submit" value="Salvar" />
+    </form>
+</div>
+
+<div id="Sample">
+    <form id="Sple">
+        <button type="submit" value="Salvar" />
+    </form>
+</div>
+
+
+<div id="WChoice">
+    <form id="WChoice">
+        Obs: entre  8 para 80%  e 2 para 20%. A soma dos dois tem que dar 100%!
+        <br />
+        Percentagem 1ª Opção: <input type="text" name="peso1">
+        <br>
+        Percentagem 2ª Opção: <input type="text" name="peso2">
+        <br>
+
+        <button type="submit" value="Salvar" />
+    </form>
+</div>
+
+
+<div id="RandomInteger">
+    <form id="RInteger">
+        Obs: entre o mínimo e o máximo. Para esta randomização será considerado o resto da divisão por 2. Por exemplo, 5 div 2 tem resto 1,  desta forma, 1 será B, enquanto que, 0 será A.
+        <br />
+        Mínimo: <input type="text" name="peso1">
+        <br>
+        Máximo: <input type="text" name="peso2">
+        <br>
+
+        <button type="submit" value="Salvar" />
+    </form>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
