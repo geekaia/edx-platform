@@ -1,6 +1,5 @@
 
 
-
 CMS
    -- Port CMS new edX  - Ok
    -- Configure IP  to preview in LMS - OK
@@ -11,11 +10,16 @@ LMS
    -- Port LMS to new edX - OK
 
 
+
+
 Sugestões Ricardo
 Estudar randomizações
 
 1. proportion - OK
-2. blocking - 
+2. blocking - SOMENTE COM CÓDIGO
+    -- Uma possibilidade é mudar a probabilidade para mais de quem tem menos, até que complete a quantidade desejada
+
+
 3. stratification - ???
 4. Quasi-experimental 
 

@@ -38,14 +38,17 @@ from django.contrib.auth.decorators import login_required
 # New EDX
 from opaque_keys.edx.keys import UsageKey, CourseKey
 
+from django_future.csrf import ensure_csrf_cookie
+from django.core.context_processors import csrf
 
+from experiments.models import *
 
 # from contentstore.utils import (
 #     get_lms_link_for_item, add_extra_panel_tab, remove_extra_panel_tab,
 #     get_modulestore)
 
 
-__all__ = ['experiments_handler', 'block_clone_handler', 'analise_experiment', 'EmailsExp']
+__all__ = ['experiments_handler', 'block_clone_handler', 'analise_experiment', 'EmailsExp', 'DefineStrategy']
 CREATE_IF_NOT_FOUND = ['course_info']
 log = logging.getLogger(__name__)
 
@@ -53,6 +56,13 @@ log = logging.getLogger(__name__)
 @ensure_csrf_cookie
 @login_required
 def EmailsExp(request,  course_key_string, idExp=None):
+
+        # usage_key = CourseKey.from_string(course_key_string)
+        #
+        # # print "Course Location: ", courseKey
+        #
+        # if not has_course_access(request.user, usage_key):
+        #     raise PermissionDenied()
 
         response = HttpResponse(content_type='text/csv; charset=utf-8')
         response['Content-Disposition'] = 'attachment; filename="relatorio2.csv"'
@@ -62,29 +72,24 @@ def EmailsExp(request,  course_key_string, idExp=None):
             exp = ExperimentDefinition.objects.get(userTeacher=request.user, id=idExp)
             expsUsrsInfos={}
 
-
             uschs = UserChoiceExperiment.objects.filter(experimento=exp)
 
             print "Tamanho: ", len(uschs)
             # print "exp: ", exp
 
-            arms={}
-            listA=[]
-            listB=[]
+            arms = {}
+            listA = []
+            listB = []
 
             writer.writerow(['arm', 'usuario', 'e-mail'])
 
             for usch in uschs:
-
                 if usch.versionExp.version == "A":
                     listA.append(usch.userStudent)
                 else:
                     listB.append(usch.userStudent)
-
-
             for i in listA:
                 writer.writerow(['A', i.username, i.email])
-
 
             for i in listB:
                 writer.writerow(['B', i.username, i.email])
@@ -94,6 +99,145 @@ def EmailsExp(request,  course_key_string, idExp=None):
         except:
             print "Erro ao pegar o exp"
 
+
+
+@ensure_csrf_cookie
+@login_required
+def DefineStrategy(request,  course_key_string, idExperiment=None):
+
+
+    mensagem = ""
+    mensagemBlock=''
+    mensagemWeightedChoice = ''
+    mensagemUniformChoice=''
+
+    usage_key = CourseKey.from_string(course_key_string)
+
+    # print "Course Location: ", courseKey
+
+    if not has_course_access(request.user, usage_key):
+        raise PermissionDenied()
+
+    csrf_token = csrf(request)['csrf_token']
+
+    exp = ExperimentDefinition.objects.get(pk=idExperiment)
+
+    strategy = exp.strategy
+
+    try:
+
+        if request.POST:
+            print "Ola mundo cruel!!!"
+
+            strategySel = request.POST['strategySel']
+
+
+            print "O que está na memória!!!     : ", strategySel
+
+            strategy.strategyType = strategySel
+
+
+            if strategySel == 'WeightedChoice':
+                print "A estratégia é WeightedChoice"
+
+                strategy.percent1 = float(request.POST['peso1'])
+                strategy.percent2 = float(request.POST['peso2'])
+
+                strategy.save()
+
+                mensagemWeightedChoice = "WeightedChoice Salvo!"
+
+            elif strategySel == 'UniformChoice':
+                strategy.save()
+
+                print "A estratégia é UniformChoice"
+                mensagemUniformChoice = "UniformChoice Salvo!"
+
+            elif strategySel == 'Block':
+                print "A estratégia é Block"
+                strategy.quantAlunos = int(request.POST['quantAlunos'])
+                strategy.tamanhoBlocos = int(request.POST['tamanhoBlocos'])
+                strategy.quantBlocos = int(strategy.quantAlunos/strategy.tamanhoBlocos)
+
+                mensagemBlock = "BlockChoice Salvo!"
+
+                strategy.save()
+
+    except:
+        mensagem = 'Ocorreu um erro ao cadastrar o usuário!!!'
+
+
+        # exp = ExperimentDefinition.objects.get(userTeacher=request.user, id=idExperiment)
+        #
+        # try:
+        #     if strategySel == 'Block':
+        #         print "StrategySel Block"
+        #         quantAlunos = int(request.POST['quantAlunos'])
+        #         tamanhoBlocos = int(request.POST['tamanhoBlocos'])
+        #         quantBlocos = quantAlunos/tamanhoBlocos
+        #
+        #         strategy = exp.strategy
+        #         strategy.strategyType = 'Block'
+        #         strategy.quantAlunos = quantAlunos
+        #         strategy.tamanhoBlocos = tamanhoBlocos
+        #         strategy.quantBlocos = quantBlocos
+        #         strategy.save()
+        #         mensagem = 'Strategy defined as Block!!'
+        #     elif strategySel == 'UniformChoice':
+        #         print "StrategySel UniformChoice"
+        #         strategy = exp.strategy
+        #         strategy.strategyType = 'UniformChoice'
+        #         strategy.save()
+        #         mensagem = 'Strategy defined as UniformChoice!!'
+        #     elif strategySel == 'WeightedChoice':
+        #         print "WeightedChoice "
+        #         peso1 = request.POST['peso1']
+        #         peso2 = request.POST['peso2']
+        #         strategy = exp.strategy
+        #         strategy.strategyType = 'WeightedChoice'
+        #         strategy.percent1 = peso1
+        #         strategy.percent2 = peso2
+        #         strategy.save()
+        #         mensagem = 'Strategy defined as WeightedChoice!!!!'
+        # except:
+        #     mensagem = 'Ocorreu um erro e não foi possível salvar!!!!'
+
+
+
+    #print "course_key_string: ", course_key_string
+    #print "idExperiment: ", idExperiment
+
+
+
+    return render_to_response('experiment/estrategia.html', {
+            'course_key_string': course_key_string,
+            'csrf': csrf_token,
+            'idExperiment': idExperiment,
+            'strat': strategy,
+            'mensagem': mensagem,
+            'mensagemBlock': mensagemBlock,
+            'mensagemWeightedChoice': mensagemWeightedChoice,
+            'mensagemUniformChoice': mensagemUniformChoice,
+        })
+
+
+
+# @ensure_csrf_cookie
+# @login_required
+# def SetupStrategy(request):
+#
+#
+#
+#     return render_to_response('experiment/estrategia.html', {
+#             'course_key_string': 'asdfasdfsdf',
+#         })
+#
+
+
+
+
+
+#
 
 @require_GET
 @ensure_csrf_cookie
@@ -120,6 +264,7 @@ def experiments_handler(request, course_key_string):
     return render_to_response('experiment/experimentos.html', {
             'lms_link': lms_link,
             'explist': expList,
+            'course_key_string': course_key_string,
             'context_course': course_module # Se não tiver essa variável não carregará o menu
         })
 
@@ -130,6 +275,13 @@ def experiments_handler(request, course_key_string):
 @require_http_methods(("GET", "PUT", "POST"))
 @expect_json
 def block_clone_handler(request, course_key_string):
+
+    usage_key = CourseKey.from_string(course_key_string)
+
+    if not has_course_access(request.user, usage_key):
+        raise PermissionDenied()
+
+
 
     if request.method in ('PUT', 'POST'):
         #  Get location Course com base no valor passado pelo Json
@@ -170,11 +322,9 @@ def block_clone_handler(request, course_key_string):
                 print "Acrei o caraio "
             #     print "Eu achei o módulo que será duplicado , ", sectionFind_location
 
-
     #             # Cria uma subsection
     #
                 NewLocatorItemSection = create_item(locatorCursokey, 'chapter', section.display_name_with_default, request)
-
 
     #
                 print "New Location item: ", unicode(NewLocatorItemSection)
@@ -228,6 +378,18 @@ def block_clone_handler(request, course_key_string):
                 # Será adicionado os campos EXPERIMENTO e VERSÃO do EXPERIMENTO no campo da Section
 
 
+                st = StrategyRandomization()
+                st.strategyType = 'Uniform'
+                st.percent1 = 0.0
+                st.percent2 = 0.0
+                st.probability = 0.0
+                st.quantAlunos = 0
+                st.tamanhoBlocos = 0
+                st.quantBlocos = 0
+
+                st.save()
+
+
                 # Experiment defintion
                 exp = ExperimentDefinition()
                 exp.course = request.json['parent_locator']
@@ -235,6 +397,7 @@ def block_clone_handler(request, course_key_string):
                 exp.status = 'paused'
                 now = datetime.datetime.now()
                 exp.descricao='MyExperiment %s ' % now
+                exp.strategy = st
                 exp.save()
     #
                 # Define a primeira versão do experimento
@@ -336,9 +499,7 @@ def block_clone_handler(request, course_key_string):
                     # Print all Units
                     for unit in units_Subsection:
 
-
                         originalState = compute_publish_state(unit)
-
                         destinationUnit = duplicate_item(NewLocatorItemSubsection, unit.location, unit.display_name_with_default, request.user)
 
 
@@ -579,22 +740,6 @@ def create_item(parent_location, category, display_name, request, dt_metadata=No
 
 
 
-
-
-
-
-
-
-
-
-
-
-#
-#
-#
-#
-#
-#
 # # comp_locator = loc_mapper().translate_location(course.location.course_id, comp.location, False, True)
 # # fonte = unit_location # parent_locator = BlockUsageLocator(request.json['parent_locator'])
 # # destino = NewLocationItem # Unit duplicada da Fonte

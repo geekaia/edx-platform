@@ -3,7 +3,18 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-# Esta tabela explica
+class StrategyRandomization(models.Model):
+    # Strategy: Uniform, WeightedChoice, BernoulliTrial, RandomInteger, Block Randomization
+    strategyType = models.CharField(max_length=50)
+    # Caso a estrategia seja Weight
+    percent1 = models.DecimalField(max_digits=2, decimal_places=2, blank=True) # Probabilidade de o bernoult trial
+    percent2 = models.DecimalField(max_digits=2, decimal_places=2, blank=True) # Probabilidade de o bernoult trial
+    probability = models.DecimalField(max_digits=2, decimal_places=2, blank=True) # Probabilidade de o bernoult trial
+    quantAlunos = models.IntegerField(blank=True) # exemplo 200 alunos
+    tamanhoBlocos = models.IntegerField(blank=True) # 10
+    quantBlocos = models.IntegerField(blank=True) # 200/10 = 20 tem que fazer a definição pelo javascript
+
+
 class ExperimentDefinition(models.Model):
     descricao = models.CharField(max_length=255, default='meuprimeiroexperimento') # descricao do ExperimentoDeverei gerar um número ou data para a descrição
     course = models.CharField(max_length=500)
@@ -11,6 +22,7 @@ class ExperimentDefinition(models.Model):
     userTeacher = models.ForeignKey(User)
 
     #algoritmo = models.CharField por enquanto só será utilizado A/B, depois pensarei nos demais
+    strategy = models.ForeignKey(StrategyRandomization)
 
 
 class OpcoesExperiment(models.Model):
@@ -21,10 +33,10 @@ class OpcoesExperiment(models.Model):
     version = models.CharField(max_length=1) # A ou B # Se Não tiver A, então Esta inserido a versão versão A
 
 
-# Esta
 class UserChoiceExperiment(models.Model):
     userStudent = models.ForeignKey(User)
     versionExp = models.ForeignKey(OpcoesExperiment)
+    bloco = models.IntegerField(blank=True)
     experimento = models.ForeignKey(ExperimentDefinition)
 
 
@@ -32,26 +44,3 @@ class HistoricoQuestoes(models.Model):
     campo = models.CharField(max_length=600)
     valor = models.CharField(max_length=600)
     usuario = models.ForeignKey(User)
-
-
-
-# class StrategyPlanout(models.Model):
-#     # Strategy: Uniform, WeightedChoice, BernoulliTrial, RandomInteger
-#     strategy = models.CharField(max_length=30)
-#     # Caso a estrategia seja Weight
-#     percent1 = models.IntegerField(blank=True)
-#     percent2 = models.IntegerField(blank=True)
-#     prob = models.DecimalField(max_digits=1, decimal_places=2, blank=True)
-
-
-
-
-
-
-
-#             opcs = OpcoesExperiment.objects.filter(experimento=urlExp.experimento)
-
-
-
-
-

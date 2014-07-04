@@ -42,6 +42,7 @@
                     </thead>
 
                     <tbody>
+                    <%  showdefine = True %>
                % for exp in explist:
                         <tr>
                             <td>${exp.descricao}</td>
@@ -53,6 +54,12 @@
                                         <a href="${lms_link.split('jump_to')[0]}expAnalise/${exp.id}/" class="button action-primary action">${_("View Results")}</a>
                                         <br />
                                         <a href="experiments/${exp.id}" class="button action-primary action">${_("Emails")}</a>
+                                        % if showdefine:
+                                        <br />
+                                        <a href="#" onClick="window.open('../definestrategy/${course_key_string}/${exp.id}','expdefinition','width=600,height=300,location=no')" class="button action-primary action">${_("Define Strategy")}</a>
+                                         <% showdefine = False %>
+                                        % endif
+
 
                                   </li>
 

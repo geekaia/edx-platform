@@ -21,8 +21,8 @@ from django.contrib.auth.models import User
 #         return 0
 
 
-
 def cadastraVersao(user,URL,urlExp ):
+
     try:
         # Producura os para o experimento urlEXP.experimento
         opcs = OpcoesExperiment.objects.filter(experimento=urlExp.experimento)
@@ -31,17 +31,30 @@ def cadastraVersao(user,URL,urlExp ):
         CHOICES=[]# Opções do experimento. Este é o parâmetro do PlanOut
         lenV={} # Tamanh das versões
 
+
+        listBLOCOS = []
+
         max=0
         curso = None
+
+        strat=''
+        ExpPart = None
+        versao = None
+        conversao = False
 
         for opc in opcs:
             options[opc.version] = opc
             CHOICES.append(opc.sectionExp_url)
+
             curso = opc.experimento.course
 
             quant = UserChoiceExperiment.objects.filter(versionExp=opc)
 
             lenV[opc.version] = len(quant)
+
+            ExpPart = opc.experimento
+
+            strat = opc.experimento.strategy # Pega a estratégia de randomização
 
             if lenV[opc.version] >= max:
                 max = lenV[opc.version]
@@ -51,14 +64,103 @@ def cadastraVersao(user,URL,urlExp ):
         # Escolhe uma para o usuario
         print "User.id: ", user.id
 
+
         CHOICESG = CHOICES
+        exp = None
 
-        class UrlExperiment(SimpleExperiment):
-          def assign(self, params, userid):
-            params.URL = UniformChoice(choices=CHOICESG,
-              unit=userid)
+        print "Strategy type: ", strat.strategyType
 
-        exp = UrlExperiment(userid=user.id)
+        bloco = 0
+
+        # Pega a estratégia de randomização
+        if strat.strategyType == 'UniformChoice':
+            class UrlExperiment(SimpleExperiment):
+              def assign(self, params, userid):
+                params.URL = UniformChoice(choices=CHOICESG, unit=userid)
+
+
+            print "A estratégia é a UniformChoice"
+
+            exp = UrlExperiment(userid=user.id)
+        elif strat.strategyType == 'WeightedChoice':
+            class UrlExperimentWeighted(SimpleExperiment):
+              def assign(self, params, userid):
+                params.URL = WeightedChoice(choices=CHOICESG, weights=[strat.percent1, strat.percent2], unit=userid)
+
+            exp = UrlExperimentWeighted(userid=user.id)
+        elif strat.strategyType == 'Block':
+            # Gera a lista com a quantidade blocos
+            BlocosNum = strat.quantBlocos
+            maxPorArm = strat.tamanhoBlocos/2
+            quantAlunos = strat.quantAlunos
+
+
+            listBLOCOS = range(1, 1+strat.quantBlocos) # Blocos que serão randomizados
+            achei=False
+
+
+            # Procura em um arm para ver se há algum que tenha
+            while achei != True:
+
+                class BlocoChoice(SimpleExperiment):
+                  def assign(self, params, userid):
+                    params.bloco = UniformChoice(choices=listBLOCOS, unit=userid)
+
+                bk = BlocoChoice(useid=user.id)
+                bloco  = bk.get('bloco')
+
+
+                # Verifica se o bloco escolhido tem 100%
+                tanAtualA = len(UserChoiceExperiment.objects.filter(bloco=bloco, experimento=ExpPart, versionExp=options['A'])) # Bloco e Versão
+                tanAtualB = len(UserChoiceExperiment.objects.filter(bloco=bloco,  experimento=ExpPart, versionExp=options['A'])) # Bloco e Versão
+
+                # Case 1 - ambos os arms alcançaram 100%
+                if tanAtualA == tanAtualB == maxPorArm:
+                    print "Não precisa randomizar!!! Só pular e remover este Bloco laço "
+
+                    listBLOCOS.pop(listBLOCOS.index(int(bloco)))
+
+                    continue
+
+                elif tanAtualA == maxPorArm: # não precisa randomizar
+                    class UrlExperiment(SimpleExperiment):
+                        def assign(self, params, userid):
+                            params.URL = WeightedChoice(choices=CHOICESG, weights=[0, 1], unit=userid)
+
+                    exp = UrlExperiment(userid=user.id)
+
+                    versao='B'
+                    achei = True
+                    conversao = True
+                elif tanAtualB == maxPorArm:
+                    class UrlExperiment(SimpleExperiment):
+                        def assign(self, params, userid):
+                            params.URL = WeightedChoice(choices=CHOICESG, weights=[1, 0], unit=userid)
+
+                    exp = UrlExperiment(userid=user.id)
+
+                    versao = 'A'
+                    achei = True
+                    conversao = False
+                elif len(listBLOCOS) == 0 : # Se for 0, não há como para randomizar com blocos
+                    class UrlExperiment(SimpleExperiment):
+                        def assign(self, params, userid):
+                            params.URL = UniformChoice(choices=CHOICESG, unit=userid)
+
+                    exp = UrlExperiment(userid=user.id)
+                    achei = True
+                    conversao = True
+                    bloco = 0
+                else:
+                    # Randomiza se nenhum dos arms tem 100%
+                    class UrlExperiment(SimpleExperiment):
+                        def assign(self, params, userid):
+                            params.URL = UniformChoice(choices=CHOICESG, unit=userid)
+
+                    exp = UrlExperiment(userid=user.id)
+                    achei = True
+                    conversao = False
+
 
         URLChoice=""
 
@@ -74,16 +176,16 @@ def cadastraVersao(user,URL,urlExp ):
         # num = randint(1,2)
         num = CHOICES.index(URLChoice)
 
-        versao = None
 
-        if num == 0:
+
+        if num == 0 and conversao == False :
             versao = 'A' # Removi o balanceamento de 50 50
             # if max != lenV['A']:
             #     versao = 'A'
             # else:
             #     versao = 'B'
 
-        else:
+        elif conversao == False:
             versao = 'B'
             # if max != lenV['B']:
             #     versao = 'B'
@@ -95,23 +197,31 @@ def cadastraVersao(user,URL,urlExp ):
         # estará nela para sempre
         # e todo o sempre
 
-        if curso:
-            expsCurso = ExperimentDefinition.objects.filter(course=curso)
+        try:
 
-            print "tamanho: ", len(expsCurso)
+            if curso:
+                expsCurso = ExperimentDefinition.objects.filter(course=curso)
 
-            for experi in expsCurso:
-                userChoice = UserChoiceExperiment.objects.filter(userStudent=user, experimento=experi)
+                print "tamanho: ", len(expsCurso)
 
-                if len(userChoice)>0:
-                    for usrC in userChoice:
-                        versao = usrC.versionExp.version
-                        print "EU JA ESCOLHI UMA VERSAO QUE E: ", usrC.versionExp.version
+                for experi in expsCurso:
+                    userChoice = UserChoiceExperiment.objects.filter(userStudent=user, experimento=experi)
 
+                    print "Len UserChoice: ", len(userChoice)
+
+                    if len(userChoice)>0:
+                        for usrC in userChoice:
+                            versao = usrC.versionExp.version
+                            print "EU JA ESCOLHI UMA VERSAO QUE E: ", usrC.versionExp.version
+
+        except:
+            print "Erro ao pegar uma versão anterior"
+            print "Versão: ", versao
 
         # Grava a versão escolhida
         userVersion = UserChoiceExperiment()
         userVersion.userStudent = user
+        userVersion.bloco = bloco # Vai depender do algoritmo
         userVersion.versionExp = options[versao]
         userVersion.experimento = urlExp.experimento
         userVersion.save()
@@ -257,8 +367,6 @@ def urlsExcluir(user):
 
     else:
         return listURLandExps
-
-
 
 
 # Pega todos os experimentos

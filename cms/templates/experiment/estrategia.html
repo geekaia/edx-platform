@@ -5,64 +5,202 @@
     <title></title>
 </head>
 <body>
+<table>
+    <tr>
+        <td width="300px">
+            Estrategia de randomizaçao
+        </td>
 
-<select>
-  <option value="UniformChoice">Uniform</option>
-  <option value="WeightedChoice">Proportion</option>
-  <option value="BernoulliTrial">BernoulliTrial</option>
-  <option value="RandomInteger">RandomInteger</option>
-  <option value="Sample">Sample</option>
-</select>
+        <td>
+            <select id="estrategy" onchange="updateMainDiv();">
+              <option value="Block">Block Design</option>
+              <option value="UniformChoice">Uniform</option>
+              <option value="WeightedChoice">Proportion</option>
+            </select>
+        </td>
+    </tr>
+</table>
 
-
-<div id="uniform">
-    <form id="UfChoice">
-        <button type="submit" value="Salvar" />
-    </form>
-</div>
-
-<div id="Sample">
-    <form id="Sple">
-        <button type="submit" value="Salvar" />
-    </form>
-</div>
-
-
-<div id="WChoice">
-    <form id="WChoice">
-        Obs: entre  8 para 80%  e 2 para 20%. A soma dos dois tem que dar 100%!
+<div id="uniform" hidden="true">
+    <br />
+    <br />
+    <form id="UfChoice" method="POST">
+        <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}"  />
+        <input type="hidden" id="strategySelUfChoice" name='strategySel' value="UniformChoice" />
         <br />
-        Percentagem 1ª Opção: <input type="text" name="peso1">
-        <br>
-        Percentagem 2ª Opção: <input type="text" name="peso2">
-        <br>
+        <font color="blue">${mensagemUniformChoice}</font>
 
-        <button type="submit" value="Salvar" />
-    </form>
-</div>
-
-
-<div id="RandomInteger">
-    <form id="RInteger">
-        Obs: entre o mínimo e o máximo. Para esta randomização será considerado o resto da divisão por 2. Por exemplo, 5 div 2 tem resto 1,  desta forma, 1 será B, enquanto que, 0 será A.
         <br />
-        Mínimo: <input type="text" name="peso1">
-        <br>
-        Máximo: <input type="text" name="peso2">
-        <br>
-
-        <button type="submit" value="Salvar" />
+        ${mensagem}
+        <br />
+        <input type="submit" value="Salvar" />
     </form>
 </div>
 
 
+<div id="WChoice"  hidden="true">
+    <br />
+    <br />
+    <form id="WChoice" method="POST">
+        <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}" />
+        <input type="hidden" id="strategySelWChoice" name='strategySel' value="WeightedChoice" />
+        Obs: entre  0.8 para 80%  e 0.2 para 20%. A soma dos dois tem que dar 1.
+        <br />
+        Percentagem Arm A <input type="text" name="peso1" value="${strat.percent1}" />
+        <br>
+        Percentagem Arm B <input type="text" name="peso2" value="${strat.percent2}" />
+
+        <br />
+        <font color="blue">${mensagemWeightedChoice}</font>
+
+        <br />
+        ${mensagem}
+
+        <br>
+        <input type="submit" value="Salvar" />
+    </form>
+</div>
+
+
+<div id="blockRandomization">
+
+    <form id="blockRandomizationFORM" method="POST">
+
+        <br />
+        <input type="hidden" id="strategySelblock" name='strategySel' value="Block" />
+        <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}" />
+
+        <table border="0">
+
+            <tr>
+                <td width="300px">Quantidade de Alunos do experimento:</td>
+                <td><input type="text" size="10" onkeyup="updateBloco();" onchange="updateBloco();" onkeydown="updateBloco();"  id="quantAlunos" name="quantAlunos" value="${strat.quantAlunos}" /></td>
+            </tr>
+
+            <tr>
+                <td>Tamanho dos Blocos:</td>
+                <td><input type="text"  size="10" onkeyup="updateBloco();" onchange="updateBloco();" onkeydown="updateBloco();"  id="tamanhoBlocos" name="tamanhoBlocos" value="${strat.tamanhoBlocos}" /></td>
+            </tr>
+
+            <tr>
+                <td>Quant Blocos:</td>
+
+                <td> <div id="quantBlocos">${strat.quantBlocos}</div> </td>
+            </tr>
+
+            <tr>
+                <td>
+                    <font color="blue">${mensagemBlock}</font>
+                    </td> <br />${mensagem} <br /></td>
+                <td></td>
+            </tr>
+
+            <tr>
+                <td><input type="submit" value="Salvar" /></td>
+            </tr>
+        </table>
+
+    </form>
+</div>
+
+
+<script language="javascript">
+    function updateBloco()
+    {
+        var qAlunos = parseInt(document.getElementById("quantAlunos").value);
+        var tBlocos = parseInt(document.getElementById("tamanhoBlocos").value);
+
+        qBlocos = qAlunos/tBlocos;
+
+        document.getElementById('quantBlocos').innerHTML = qBlocos;
+
+
+    }
+
+    function updateMainDiv()
+    {
+          var e = document.getElementById("estrategy");
+          var selecao = e.options[e.selectedIndex].value;
+
+          if (selecao =='Block') {
+
+              ediv = document.getElementById('uniform')
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('blockRandomization')
+              ediv.style.display = 'block';
+
+              ediv = document.getElementById('WChoice')
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('RandomInteger')
+              ediv.style.display = 'none';
+
+              document.getElementById('strategySelblock').value = 'Block'
+
+          }
+
+          if (selecao =='UniformChoice') {
+
+              ediv = document.getElementById('uniform')
+              ediv.style.display = 'block';
+
+              ediv = document.getElementById('blockRandomization')
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('WChoice')
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('RandomInteger')
+              ediv.style.display = 'none';
+
+              document.getElementById('strategySelUfChoice').value = 'UniformChoice'
+
+          }
+
+          if (selecao =='WeightedChoice') {
+              ediv = document.getElementById('uniform')
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('blockRandomization')
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('WChoice')
+              ediv.style.display = 'block';
+
+              ediv = document.getElementById('RandomInteger')
+              ediv.style.display = 'none';
+
+              document.getElementById('strategySelWChoice').value = 'WeightedChoice'
+          }
+
+
+    }
+
+    var e = document.getElementById("estrategy");
 
 
 
 
+    var strat = "${strat.strategyType}";
 
 
+    if (strat =='Block') {
+        e.selectedIndex = 0
+    }
 
+    if (strat =='UniformChoice') {
+        e.selectedIndex = 1
+    }
+
+    if (strat =='WeightedChoice') {
+        e.selectedIndex = 2
+    }
+
+    // Atualiza o DIV
+    updateMainDiv();
+
+</script>
 
 
 
