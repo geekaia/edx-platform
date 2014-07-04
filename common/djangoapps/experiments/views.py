@@ -379,7 +379,7 @@ def block_clone_handler(request, course_key_string):
 
 
                 st = StrategyRandomization()
-                st.strategyType = 'Uniform'
+                st.strategyType = 'UniformChoice'
                 st.percent1 = 0.0
                 st.percent2 = 0.0
                 st.probability = 0.0

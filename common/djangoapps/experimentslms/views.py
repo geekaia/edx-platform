@@ -78,6 +78,7 @@ def expAnalise(request, course_id,  idExp):
 
             print "Usuario: ", usuario.userStudent, " versionExp: ", usuario.versionExp.sectionExp, "Curso id: ", usuario.versionExp.sectionExp
             print "Exp URL: ", usuario.versionExp.sectionExp_url
+            print "len(usuariosparticipantes): ", len(usuariosParticipantes)
 
 
             # course = get_course_by_id(usuario.versionExp.sectionExp.split('/')[0].replace('.', '/'), depth=None)
@@ -117,6 +118,7 @@ def expAnalise(request, course_id,  idExp):
                 usrprofl.append(userprofile.language)
                 usrprofl.append(userprofile.level_of_education)
                 usrprofl.append(userprofile.year_of_birth)
+                usrprofl.append(usuario.bloco)
 
             except:
                 print "Exceção ao pegar o profile do usuario"
@@ -152,12 +154,10 @@ def expAnalise(request, course_id,  idExp):
                     exercInfoBUser=[]
 
 
-
                     if usuario.versionExp.version == 'A':
                         TotalUsersA = TotalUsersA + 1
                     else:
                         TotalUsersB = TotalUsersB + 1
-
 
 
                     for section in chapter['sections']:
@@ -303,6 +303,7 @@ def expAnalise(request, course_id,  idExp):
         writer.writerow(['arm',
                          'section',
                          'Questao',
+                         'Bloco',
                          'ScoreObtido',
                          'MaxScore',
                          'usuario',
@@ -372,6 +373,7 @@ def expAnalise(request, course_id,  idExp):
                     writer.writerow(['A',
                             int(sec)+1,
                             int(quest)+1,
+                            toUTF8(profUser[8]),
                             # questoesSection[quest][0],
                             toUTF8(questoesSection[quest][1]),
                             toUTF8(questoesSection[quest][2]),
@@ -451,6 +453,7 @@ def expAnalise(request, course_id,  idExp):
                     writer.writerow(['B',
                             int(sec)+1,
                             int(quest)+1,
+                            toUTF8(profUser[8]),
                             # questoesSection[quest][0],
                             toUTF8(questoesSection[quest][1]),
                             toUTF8(questoesSection[quest][2]),

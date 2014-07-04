@@ -85,8 +85,14 @@ def cadastraVersao(user,URL,urlExp ):
         elif strat.strategyType == 'WeightedChoice':
             class UrlExperimentWeighted(SimpleExperiment):
               def assign(self, params, userid):
-                params.URL = WeightedChoice(choices=CHOICESG, weights=[strat.percent1, strat.percent2], unit=userid)
+                params.URL = WeightedChoice(choices=CHOICESG, weights=[float(strat.percent1), float(strat.percent2)], unit=userid)
 
+            print "Estratégia é a WeightedChoice"
+
+            print "CHOICESG: ", CHOICESG, "Peso 1: ", strat.percent1, " Peso2: ", strat.percent2
+            print "Type: ", type(strat.percent1)
+            ct = float(strat.percent1)
+            print "Casting: ", ct, ' type: ', type(ct)
             exp = UrlExperimentWeighted(userid=user.id)
         elif strat.strategyType == 'Block':
             # Gera a lista com a quantidade blocos
@@ -95,30 +101,71 @@ def cadastraVersao(user,URL,urlExp ):
             quantAlunos = strat.quantAlunos
 
 
+            print "BlocosNum ", BlocosNum, " maxPorArm ", maxPorArm, ' quantAlunos ', quantAlunos
+
+
             listBLOCOS = range(1, 1+strat.quantBlocos) # Blocos que serão randomizados
             achei=False
+
+
+            print "List BLOCOS ", listBLOCOS
 
 
             # Procura em um arm para ver se há algum que tenha
             while achei != True:
 
-                class BlocoChoice(SimpleExperiment):
+                print "AÇLSDJFLKJASLKDFJLKASJDLFKASDF ENTREI NO LOOP "
+
+                class BlocosChoice(SimpleExperiment):
                   def assign(self, params, userid):
-                    params.bloco = UniformChoice(choices=listBLOCOS, unit=userid)
+                    params.BLOCOCHOICE = UniformChoice(choices=listBLOCOS, unit=userid)
 
-                bk = BlocoChoice(useid=user.id)
-                bloco  = bk.get('bloco')
+                print "Olá mundo Cruel!asdfffffffffffffffffffffffffffffffffffffffff!!"
+
+                bk = BlocosChoice(userid=user.id)
+                print "asldjflkjasldkfjlkasjdflka jsldkf jlaskdf j"
+                bloco  = bk.get('BLOCOCHOICE')
+                print "asldfjlkasjdlkfjaslkdfjl"
 
 
-                # Verifica se o bloco escolhido tem 100%
-                tanAtualA = len(UserChoiceExperiment.objects.filter(bloco=bloco, experimento=ExpPart, versionExp=options['A'])) # Bloco e Versão
-                tanAtualB = len(UserChoiceExperiment.objects.filter(bloco=bloco,  experimento=ExpPart, versionExp=options['A'])) # Bloco e Versão
+
+
+                print "Bloco selecionado: ", bloco
+
+
+                if len(listBLOCOS) > 0:
+                    # Verifica se o bloco escolhido tem 100%
+                    tanAtualA = len(UserChoiceExperiment.objects.filter(bloco=bloco, experimento=ExpPart, versionExp=options['A'])) # Bloco e Versão
+                    tanAtualB = len(UserChoiceExperiment.objects.filter(bloco=bloco,  experimento=ExpPart, versionExp=options['B'])) # Bloco e Versão
+
+                else: #len(listBLOCOS) == 0 : # Se for 0, não há como para randomizar com blocos
+                    class UrlExperiment(SimpleExperiment):
+                        def assign(self, params, userid):
+                            params.URL = UniformChoice(choices=CHOICESG, unit=userid)
+
+                    exp = UrlExperiment(userid=user.id)
+                    achei = True
+                    conversao = False
+                    bloco = 0
+
+
+                    print 'Nâo precisa mais dos blocos: len(listBLOCOS) ', len(listBLOCOS), ' achei: ', achei, ' conversao: ', conversao, ' bloco: ', bloco
+
+                    continue
+
+
+
+                print "TanAtualA: ", tanAtualA
+                print "TanAtualB: ", tanAtualB
+
 
                 # Case 1 - ambos os arms alcançaram 100%
                 if tanAtualA == tanAtualB == maxPorArm:
                     print "Não precisa randomizar!!! Só pular e remover este Bloco laço "
-
+                    print "Berfore pop: ", listBLOCOS, 'item ', bloco
                     listBLOCOS.pop(listBLOCOS.index(int(bloco)))
+
+                    print "After pop: ", listBLOCOS
 
                     continue
 
@@ -132,6 +179,10 @@ def cadastraVersao(user,URL,urlExp ):
                     versao='B'
                     achei = True
                     conversao = True
+
+                    print "tanAtualA == maxPorArm Lado A OK: ", versao, " achei? ", achei, " Conversao: ", conversao
+
+
                 elif tanAtualB == maxPorArm:
                     class UrlExperiment(SimpleExperiment):
                         def assign(self, params, userid):
@@ -141,16 +192,9 @@ def cadastraVersao(user,URL,urlExp ):
 
                     versao = 'A'
                     achei = True
-                    conversao = False
-                elif len(listBLOCOS) == 0 : # Se for 0, não há como para randomizar com blocos
-                    class UrlExperiment(SimpleExperiment):
-                        def assign(self, params, userid):
-                            params.URL = UniformChoice(choices=CHOICESG, unit=userid)
-
-                    exp = UrlExperiment(userid=user.id)
-                    achei = True
                     conversao = True
-                    bloco = 0
+
+                    print "tanAtualB == maxPorArm Lado B Ok: ", versao, ' achei? ', achei, ' Conversao: ', conversao
                 else:
                     # Randomiza se nenhum dos arms tem 100%
                     class UrlExperiment(SimpleExperiment):
@@ -160,6 +204,8 @@ def cadastraVersao(user,URL,urlExp ):
                     exp = UrlExperiment(userid=user.id)
                     achei = True
                     conversao = False
+
+                    print " Else Fim   achei", achei, ' conversao ', conversao
 
 
         URLChoice=""
