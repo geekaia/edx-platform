@@ -110,6 +110,7 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
     mensagemBlock=''
     mensagemWeightedChoice = ''
     mensagemUniformChoice=''
+    mensagemCustom=''
 
     usage_key = CourseKey.from_string(course_key_string)
 
@@ -132,7 +133,7 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
             strategySel = request.POST['strategySel']
 
 
-            print "O que está na memória!!!     : ", strategySel
+            print "O que está na memória!!!:", strategySel, ' len:', len(strategySel)
 
             strategy.strategyType = strategySel
 
@@ -146,6 +147,12 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
                 strategy.save()
 
                 mensagemWeightedChoice = "WeightedChoice Salvo!"
+            elif strategySel == 'customizada':
+                strategy.planoutScript = request.POST['input']
+                strategy.planoutJson = request.POST['output']
+                strategy.save()
+
+                mensagemCustom = 'PlanoutScript e Json salvos com sucesso!!'
 
             elif strategySel == 'UniformChoice':
                 strategy.save()
@@ -162,6 +169,84 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
                 mensagemBlock = "BlockChoice Salvo!"
 
                 strategy.save()
+
+            elif strategySel == 'Estratificada':
+
+                print "A minha opção é estratificada"
+
+                # Quantidade de alunos dos Strats
+                strategy.quantAlunoStrats = int(request.POST['quantAlunoStrats'])
+
+                # Quant rows experiments
+                rowsStrat = int(request.POST['lenfactors'])
+
+                print "Len factors", rowsStrat, 'range: ', range(1, rowsStrat+1)
+
+                fatorList = []
+
+                for i in range(1, rowsStrat+1):
+
+                    fatoresLine =[]
+
+                    # Primeira coluna
+                    col1Type = request.POST['row'+str(i)]
+
+                    print "Valor do primeiro fator", col1Type
+
+                    myfactor = getListLine(col1Type, i, request, '')
+
+                    print "My Factor: ", myfactor
+
+                    fatoresLine.append(myfactor)
+
+                    # Terceira coluna
+                    # verifica se há algum fator que é combinado com o primeiro
+                    tem=True
+
+                    try:
+                        val = request.POST['Nameaddfact'+str(i)]
+                        tem = False
+                    except:
+                        print 'Aconteceu uma exceção. Por isso, há um outro fator'
+                        tem = True
+
+                    # Tem que fazer isso pq o segundo fator é opcional
+                    print "Tem?: ", tem
+
+
+                    if tem == True:
+
+                        col2Type = request.POST['1row'+str(i)]
+
+                        print "Tipo segundo fator ", col2Type
+
+                        fatoresLine.append(getListLine(col2Type, i, request, '1'))
+                        print "Eu consegui adicionar"
+
+
+                    fatorList.append(','.join(fatoresLine))
+
+
+                print "\nLista final de fatores por linha ", fatorList, '\n'
+
+                fatorescondition = ';'.join(fatorList)
+
+
+                # Agora irei salvar a lista de todas as informações
+                strategy.fatorList = fatorescondition
+
+                print
+                print "Lista final om todos os fatores como String: ", strategy.fatorList
+                print
+
+                strategy.save()
+                mensagem = 'Estratégia estratificada salva com sucesso!!!!'
+
+                print "Deu certo em salvar a estratégia "
+                # Para voltar a ser list tem que fazer o split ; depois , e depois |
+
+
+                print "A minha escolha é estratificada"
 
     except:
         mensagem = 'Ocorreu um erro ao cadastrar o usuário!!!'
@@ -207,6 +292,109 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
     #print "course_key_string: ", course_key_string
     #print "idExperiment: ", idExperiment
 
+    # Render elements já envia a lista dos elementos que serã renderizados no HTML
+    elementosStrat=[]
+    #
+    cellSexo = "Sexo<input type='hidden' name='coltype' value='Sexo' />"
+    cellSexoCondition ="<select name='sexo'> <option value='m'>Masculino</option> <option value='f'>Feminino</option><select>"
+    #
+    cellIdade = "Idade<input type='hidden' name='coltype' value='Idade' />"
+    cellIdadeCondition = "<select name='idade'> <option>></option> <option>>=</option> <option><</option> <option><=</option></select> <input type='text' name='Valoridade' />"
+
+    cellCidade="Cidade<input type='hidden' name='coltype' value='Cidade' />"
+    cellCidadeCondition = "<select name='cidade'> <option>Sao Paulo-SP</option><option>Belo Horizonte-MG</option></select>"
+    selectAdd = "<select id='addfact' name='Nameaddfact'> <option value='Sexo'>Sexo</option> <option value='Idade'>Idade</option><option value='Cidade'>Cidade</option></select><input type='button' value='+'' onclick='addColFactor(rowactual);' />"
+    #
+    #
+    def isSelected(val, val2):
+
+        print "Teste eval: ", val, val2
+
+        if val == val2:
+            return 'selected'
+        else:
+            return ''
+
+    #
+    def renderField(tipo, listfield, col, row):
+        if tipo == 'Sexo':
+
+            htmlsexo = "<select name='"+str(col)+'sexo'+str(row)+"'> " \
+                       "<option value='m' "+isSelected('m',listfield[1] )+">Masculino</option> <option value='f' "+isSelected('f',listfield[1] )+">Feminino</option><select>";
+
+            return htmlsexo
+
+        elif tipo == 'Idade':
+            htmlIdade = "<select name='"+str(col)+'idade'+str(row)+"'> <option "+isSelected('>', listfield[1])+">></option> <option "+isSelected('>=', listfield[1])+">>=</option> <option "+isSelected('<', listfield[1])+"><</option> <option "+isSelected('<=', listfield[1])+"><=</option></select> <input type='text' name='"+str(col)+'Valoridade'+str(row)+"' value='"+listfield[2]+"' />";
+
+            return htmlIdade
+        elif tipo == 'Cidade':
+            htmlCidade ="<select name='"+str(col)+'cidade'+str(row)+"'> <option "+isSelected('São Paulo-SP', listfield[1])+">São Paulo-SP</option><option "+isSelected('Belo Horizonte-MG', listfield[1])+">Belo Horizonte-MG</option></select>"
+
+
+            return htmlCidade
+
+
+    # Configura a primeira e a terceira coluna da tabela
+    def getTipo(tipo, col, row):
+        if tipo == 'Sexo':
+            cellSexo.replace('coltype', str(col)+'row'+str(row))
+
+            return cellSexo
+
+        elif tipo == 'Idade':
+            cellIdade.replace('coltype', str(col)+'row'+str(row))
+
+            return cellIdade
+
+        elif tipo == 'Cidade':
+            cellCidade.replace('coltype', str(col)+'row'+str(row))
+
+            return cellCidade
+
+    cont=1
+
+
+
+    if strategy.fatorList:
+
+        LISTA_LINHAS = strategy.fatorList.split(';')
+
+        for FATOR in LISTA_LINHAS:
+
+            fator = FATOR.split(',')
+
+            if len(fator) == 1:
+                selectAdd.replace('rowactual', cont)
+                selectAdd.replace('addfact', 'addfact'+str(cont))
+                selectAdd.replace('Nameaddfact', 'Nameaddfact'+str(cont))
+
+                fatCol1 = fator[0].split('|')
+
+                htmlline ="<tr> " \
+                          "<td>"+getTipo(fatCol1[0], '', cont)+"</td> " \
+                          "<td>"+renderField(fatCol1[0], fatCol1, '', cont)+"</td> " \
+                          "<td> "+selectAdd+"</td> " \
+                          "<td></td> " \
+                          "<td><input type='button' value='Remover' onClick='$(this).parent().parent().remove();'></td> " \
+                          "</tr> "
+
+            elif len(fator)==2:
+                print 'Nao precisa do addselect'
+                fatCol1 = fator[0].split('|')
+                fatCol2 = fator[1].split('|')
+
+                htmlline ="<tr> " \
+                          "<td>"+getTipo(fatCol1[0], '', cont)+"</td> " \
+                          "<td>"+renderField(fatCol1[0], fatCol1, '', cont)+"</td> " \
+                          "<td> "+getTipo(fatCol2[0], '1', cont)+"</td> " \
+                          "<td> "+renderField(fatCol2[0], fatCol2, '1', cont)+"</td> " \
+                          "<td><input type='button' value='Remover' onClick='$(this).parent().parent().remove();'></td> " \
+                          "</tr> "
+
+            elementosStrat.append(htmlline)
+
+            cont = cont +1
 
 
     return render_to_response('experiment/estrategia.html', {
@@ -214,12 +402,55 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
             'csrf': csrf_token,
             'idExperiment': idExperiment,
             'strat': strategy,
+            'elementosStrat': elementosStrat,
             'mensagem': mensagem,
             'mensagemBlock': mensagemBlock,
             'mensagemWeightedChoice': mensagemWeightedChoice,
             'mensagemUniformChoice': mensagemUniformChoice,
+            'mensagemCustom': mensagemCustom,
         })
 
+
+# Get list line de acordo com o tipo
+def getListLine(col1Type, i, request, col):
+    if col1Type == 'Sexo':
+        # Get a segunda coluna
+        tipo='Sexo'
+        val = request.POST[col+'sexo'+str(i)]
+
+        fator  =[]
+        fator.append(tipo)
+        fator.append(val)
+
+        print "Fator: ", '|'.join(fator)
+
+        return '|'.join(fator)
+    elif col1Type == 'Idade':
+        # Get a segunda coluna
+        tipo='Idade'
+        valCondicao = request.POST[col+'idade'+str(i)]
+        valor = request.POST[col+'Valoridade'+str(i)]
+
+        fator  =[]
+        fator.append(tipo)
+        fator.append(valCondicao)
+        fator.append(valor)
+
+        print "Fator idade:   ", fator
+
+        return '|'.join(fator)
+    elif col1Type == 'Cidade':
+
+        tipo='Cidade'
+        val = request.POST[col+'cidade'+str(i)]
+
+        fator = []
+        fator.append(tipo)
+        fator.append(val)
+
+        print "Fator cidade: ", fator
+
+        return '|'.join(fator)
 
 
 # @ensure_csrf_cookie
@@ -276,10 +507,10 @@ def experiments_handler(request, course_key_string):
 @expect_json
 def block_clone_handler(request, course_key_string):
 
-    usage_key = CourseKey.from_string(course_key_string)
-
-    if not has_course_access(request.user, usage_key):
-        raise PermissionDenied()
+    # usage_key = CourseKey.from_string(course_key_string)
+    #
+    # if not has_course_access(request.user, usage_key):
+    #     raise PermissionDenied()
 
 
 
@@ -553,6 +784,8 @@ def block_clone_handler(request, course_key_string):
                                     _publish
                                 )
 
+
+
                         except:
                             print "Erro ao setar publico"
     #
@@ -737,7 +970,6 @@ def create_item(parent_location, category, display_name, request, dt_metadata=No
 
 
     return dest_location
-
 
 
 # # comp_locator = loc_mapper().translate_location(course.location.course_id, comp.location, False, True)

@@ -8,9 +8,16 @@ __author__ = 'geekaia'
 from experiments.models import *
 import sys
 # Experimento uniforme
+from django.contrib.auth.models import User
 from planout.experiment import SimpleExperiment
 from planout.ops.random import *
-from django.contrib.auth.models import User
+from planout.interpreter import *
+import json
+import hashlib
+from abc import ABCMeta, abstractmethod
+
+from student.models import UserProfile
+from datetime import date
 
 # def getQuantExp(Exp, 'A'):
 #
@@ -41,6 +48,7 @@ def cadastraVersao(user,URL,urlExp ):
         ExpPart = None
         versao = None
         conversao = False
+        deuerro = False
 
         for opc in opcs:
             options[opc.version] = opc
@@ -87,13 +95,72 @@ def cadastraVersao(user,URL,urlExp ):
               def assign(self, params, userid):
                 params.URL = WeightedChoice(choices=CHOICESG, weights=[float(strat.percent1), float(strat.percent2)], unit=userid)
 
-            print "Estratégia é a WeightedChoice"
+            print "A Estratégia é a WeightedChoice"
 
             print "CHOICESG: ", CHOICESG, "Peso 1: ", strat.percent1, " Peso2: ", strat.percent2
             print "Type: ", type(strat.percent1)
             ct = float(strat.percent1)
             print "Casting: ", ct, ' type: ', type(ct)
             exp = UrlExperimentWeighted(userid=user.id)
+
+        elif strat.strategyType == 'customizada':
+            print "Estratégia é a Customizada "
+
+            try:
+                class SimpleInterpretedExperiment(SimpleExperiment):
+                  """Simple class for loading a file-based PlanOut interpreter experiment"""
+                  __metaclass__ = ABCMeta
+
+                  filename = None
+
+                  def assign(self, params, **kwargs):
+                    print
+                    print "Filename =", self.filename
+                    print "Json Loads: ", json.loads(self.filename), ' Tipo: ', type(json.loads(self.filename))
+                    print 'Consegui carregar o json --- Tipo: ', type(self.filename)
+
+                    jsondata = json.loads(self.filename)
+
+                    procedure = Interpreter(jsondata, self.salt, kwargs)
+                    print "O interpretador pegou os dados "
+                    params.update(procedure.get_params())
+                    print "Fiz o update dos parâmetros"
+
+                  # def checksum(self):
+                  #   # src doesn't count first line of code, which includes function name
+                  #   src = open(self.filename).read()
+                  #   return hashlib.sha1(src).hexdigest()[:8]
+
+
+                class ExpPlanoutScript(SimpleInterpretedExperiment):
+                    filename = strat.planoutJson
+
+                # Pega o profile do usuario
+                profUser = UserProfile.objects.get(user=user)
+
+                print "Peguei o profile!!!!"
+
+                IDADE = date.today().year-profUser.year_of_birth
+                CIDADE = profUser.city
+                PAIS = profUser.country.code
+                INSTRUCAO = profUser.level_of_education
+                SEXO = profUser.gender
+
+                print "Variáveis passadas: ", IDADE, ' ', CIDADE, ' ', PAIS, ' ', INSTRUCAO, ' ', SEXO
+
+                # Tem que pegar todos os dados do profile do usuário
+                exp = ExpPlanoutScript(userid=user.id,  CHOICES=CHOICESG, IDADE=IDADE,  CIDADE=CIDADE, PAIS=PAIS, INSTRUCAO=INSTRUCAO,  SEXO=SEXO)
+                print
+                print "Peguei a versão!!!"
+                print
+                conversao = False
+                deuerro = False
+                bloco = -1
+
+            except:
+                deuerro = True
+                print "Erro nesta randomização"
+
         elif strat.strategyType == 'Block':
             # Gera a lista com a quantidade blocos
             BlocosNum = strat.quantBlocos
@@ -103,10 +170,8 @@ def cadastraVersao(user,URL,urlExp ):
 
             print "BlocosNum ", BlocosNum, " maxPorArm ", maxPorArm, ' quantAlunos ', quantAlunos
 
-
             listBLOCOS = range(1, 1+strat.quantBlocos) # Blocos que serão randomizados
             achei=False
-
 
             print "List BLOCOS ", listBLOCOS
 
@@ -126,8 +191,6 @@ def cadastraVersao(user,URL,urlExp ):
                 print "asldjflkjasldkfjlkasjdflka jsldkf jlaskdf j"
                 bloco  = bk.get('BLOCOCHOICE')
                 print "asldfjlkasjdlkfjaslkdfjl"
-
-
 
 
                 print "Bloco selecionado: ", bloco
@@ -152,8 +215,6 @@ def cadastraVersao(user,URL,urlExp ):
                     print 'Nâo precisa mais dos blocos: len(listBLOCOS) ', len(listBLOCOS), ' achei: ', achei, ' conversao: ', conversao, ' bloco: ', bloco
 
                     continue
-
-
 
                 print "TanAtualA: ", tanAtualA
                 print "TanAtualB: ", tanAtualB
@@ -182,7 +243,6 @@ def cadastraVersao(user,URL,urlExp ):
 
                     print "tanAtualA == maxPorArm Lado A OK: ", versao, " achei? ", achei, " Conversao: ", conversao
 
-
                 elif tanAtualB == maxPorArm:
                     class UrlExperiment(SimpleExperiment):
                         def assign(self, params, userid):
@@ -207,22 +267,37 @@ def cadastraVersao(user,URL,urlExp ):
 
                     print " Else Fim   achei", achei, ' conversao ', conversao
 
-
         URLChoice=""
+
+        print "Vamos pegar a URLChoice "
 
         try:
 
             URLChoice = exp.get('URL')
+            print "A minha URL é:::: ", URLChoice
+        # except TypeError as e:
+        #     print "Erro do tipo ({0}): {1}".format(e.errno, e.strerror)
+        #
         except:
-            print "Unexpected error:", sys.exc_info()[0]
+            print "Unexpected error1:", sys.exc_info()[0]
+
+        # Houver um erro em algumas das randomizações
+        if deuerro :
+            def assign(self, params, userid):
+                params.URL = UniformChoice(choices=CHOICESG, unit=userid)
+
+            exp = UrlExperiment(userid=user.id)
+
+            try:
+                URLChoice = exp.get('URL')
+            except:
+                print "Unexpected error3:", sys.exc_info()[0]
 
 
         print "URLChoice: ", URLChoice
 
         # num = randint(1,2)
         num = CHOICES.index(URLChoice)
-
-
 
         if num == 0 and conversao == False :
             versao = 'A' # Removi o balanceamento de 50 50
@@ -255,7 +330,7 @@ def cadastraVersao(user,URL,urlExp ):
 
                     print "Len UserChoice: ", len(userChoice)
 
-                    if len(userChoice)>0:
+                    if len(userChoice) > 0:
                         for usrC in userChoice:
                             versao = usrC.versionExp.version
                             print "EU JA ESCOLHI UMA VERSAO QUE E: ", usrC.versionExp.version
@@ -349,8 +424,6 @@ def VerABprint(URL, user):
         print "Caso a URL não pertença a nenhum experimento"
 
         return True
-
-
 
 def pulaURL(URL, user):
     try:

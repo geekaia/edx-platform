@@ -3,6 +3,12 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title></title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="${settings.STATIC_URL}/js/planout.js"></script>
+    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+
+
+
 </head>
 <body>
 <table>
@@ -16,10 +22,13 @@
               <option value="Block">Block Design</option>
               <option value="UniformChoice">Uniform</option>
               <option value="WeightedChoice">Proportion</option>
+              <option value="Estratificada">Estratificada</option>
+              <option value="customizada">Customizada</option>
             </select>
         </td>
     </tr>
 </table>
+
 
 <div id="uniform" hidden="true">
     <br />
@@ -103,8 +112,147 @@
     </form>
 </div>
 
+<div id="Estratification">
+
+    <!-- Fatores que podem servir para a estratificação -->
+    <!-- Sexo igual a M ou F  com caixas de seleção -->
+    <!-- Idade < > >= != e =   -->
+    <!-- Cidade -->
+    <!-- Fazer a combinação de até três fatores -->
+
+    <form method="POST" id="myformEstrat">
+
+
+        <!-- Evita o erro dos Tokens -->
+        <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}" />
+         <input type="hidden" id="strategyEstratification" name='strategySel' value="Estratificada" />
+
+        Quantidade de alunos das stratas: <input type='text' name='quantAlunoStrats' value="${strat.quantAlunoStrats}" />
+
+        <input type='hidden' name='lenfactors' id='lenfactors'/>
+        <br />
+        <br />
+        Adicionar linha com fatores:
+        <select id="tipoFator">
+          <option value="Sexo">Sexo</option>
+          <option value="Idade">Idade</option>
+          <option value="Cidade">Cidade</option>
+        </select>  <input type="button" value="+" onclick="adicionarFator();" />
+
+        <br />
+        <br />
+
+        <table border="1" id="factorscriteria">
+              <tr>
+                <td>Fator 1</td>
+                <td>Condição 1</td>
+                <td>e Fator 2</td>
+                <td>Condição 2</td>
+                <td>Ação</td>
+              </tr>
+              %for line in elementosStrat:
+                 ${line}
+              %endfor
+
+            </table>
+        <br>
+        <br />
+        ${mensagem}
+        <br />
+
+        <input type='submit' value='Salvar' />
+    </form>
+</div>
+
+
+<div id="planoutScript">
+
+<table border="1">
+    <tr>
+        <td>Variáveis de entrada</td>
+        <td>Variável de Saída</td>
+    </tr>
+    <tr>
+        <td> Obrigatórias: CHOICES e userid<br />
+            Opcionais: PAIS, CIDADE, IDADE, SEXO e INSTRUCAO.
+            <br />
+            <a href="#" onClick="window.open('${settings.STATIC_URL}/txt/codigos.txt','codigos','width=750,height=500,location=no')" class="button action-primary action">Lista de Códigos SEXO, INSTRUCAO, PAIS</a>
+        </td>
+        <td>Obrigatória: URL</td>
+    </tr>
+</table>
+<br />
+<b>Observação: </b> Caso ocorra uma excessão na randomização criada via Script do PlanOut será considerada a randomização Uniform  do
+PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha uma versão do experimento.
+
+<br />
+
+
+
+        <form method="POST">
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}" />
+            <input type="hidden" id="strategyEstratification" name='strategySel' value="customizada" />
+
+            <table border="0">
+                <tr>
+                    <td>
+                        Script em PlanOut <br /><textarea id="input" name="input" rows="20"  cols="60">${strat.planoutScript}</textarea> </td>
+
+                    <td> <input type="button" value="Compilar>>>" onclick="parse();" /></td>
+                    <td>
+                        Resultado em Json <br /> <textarea id="output" name="output" readonly rows="20" cols="60">${strat.planoutJson}</textarea> </td>
+                </tr>
+            </table>
+            <br />
+            ${mensagemCustom}
+            <br />
+
+            <b>Dica: compile o código antes de salvar!</b>
+            <br />
+            <br />
+
+            <input type="submit" id="salvar" value="Salvar" />
+        </form>
+    <br />
+    <br />
+</div>
+
+
 
 <script language="javascript">
+
+    var input = document.getElementById('input');
+    var output = document.getElementById('output');
+    var json = "";
+
+    function parse() {
+        var script = '';
+        try {
+            json = '';
+            script=  input.value;
+          json = '';
+          json = planout.parse(script);
+          //output.innerHTML = hljs.highlight('json', JSON.stringify(json, undefined, 2)).value;
+          output.innerHTML = JSON.stringify(json);
+          $("#output").attr('readonly','readonly');
+
+        } catch (err) {
+          json = "";
+          output.innerHTML = '<span class="hljs-variable">' + err + '</span>';
+        }
+    }
+
+    function addFactorRow()
+    {
+        var table = document.getElementById("factorscriteria");
+        var row = table.insertRow(-1);
+        var cell1 = row.insertCell(0);
+        var cell2 = row.insertCell(1);
+        cell1.innerHTML = "<select> <options>Cidade</options> <options>Sexo</options> </select>";
+        cell2.innerHTML = "NEW CELL2";
+    }
+
+
     function updateBloco()
     {
         var qAlunos = parseInt(document.getElementById("quantAlunos").value);
@@ -113,8 +261,6 @@
         qBlocos = qAlunos/tBlocos;
 
         document.getElementById('quantBlocos').innerHTML = qBlocos;
-
-
     }
 
     function updateMainDiv()
@@ -122,56 +268,113 @@
           var e = document.getElementById("estrategy");
           var selecao = e.options[e.selectedIndex].value;
 
+          // por enquanto irei deixar esta opcao como Hide
+          ediv = document.getElementById('Estratification')
+          ediv.style.display = 'none';
+
           if (selecao =='Block') {
 
-              ediv = document.getElementById('uniform')
+              ediv = document.getElementById('uniform');
               ediv.style.display = 'none';
 
-              ediv = document.getElementById('blockRandomization')
+              ediv = document.getElementById('blockRandomization');
               ediv.style.display = 'block';
 
-              ediv = document.getElementById('WChoice')
+              ediv = document.getElementById('WChoice');
               ediv.style.display = 'none';
 
-              ediv = document.getElementById('RandomInteger')
+              ediv = document.getElementById('Estratification');
               ediv.style.display = 'none';
 
-              document.getElementById('strategySelblock').value = 'Block'
+              ediv = document.getElementById('planoutScript');
+              ediv.style.display = 'none';
+
+              document.getElementById('strategySelblock').value = 'Block';
+              window.resizeTo(750,500);
 
           }
 
           if (selecao =='UniformChoice') {
 
-              ediv = document.getElementById('uniform')
+              ediv = document.getElementById('uniform');
               ediv.style.display = 'block';
 
-              ediv = document.getElementById('blockRandomization')
+              ediv = document.getElementById('blockRandomization');
               ediv.style.display = 'none';
 
-              ediv = document.getElementById('WChoice')
+              ediv = document.getElementById('WChoice');
               ediv.style.display = 'none';
 
-              ediv = document.getElementById('RandomInteger')
+              ediv = document.getElementById('Estratification');
               ediv.style.display = 'none';
 
-              document.getElementById('strategySelUfChoice').value = 'UniformChoice'
+              ediv = document.getElementById('planoutScript');
+              ediv.style.display = 'none';
+
+              document.getElementById('strategySelUfChoice').value = 'UniformChoice';
+               window.resizeTo(750,500);
 
           }
 
           if (selecao =='WeightedChoice') {
-              ediv = document.getElementById('uniform')
+              ediv = document.getElementById('uniform');
               ediv.style.display = 'none';
 
-              ediv = document.getElementById('blockRandomization')
+              ediv = document.getElementById('blockRandomization');
               ediv.style.display = 'none';
 
-              ediv = document.getElementById('WChoice')
+              ediv = document.getElementById('WChoice');
               ediv.style.display = 'block';
 
-              ediv = document.getElementById('RandomInteger')
+              ediv = document.getElementById('Estratification');
               ediv.style.display = 'none';
 
-              document.getElementById('strategySelWChoice').value = 'WeightedChoice'
+              ediv = document.getElementById('planoutScript');
+              ediv.style.display = 'none';
+
+              document.getElementById('strategySelWChoice').value = 'WeightedChoice';
+               window.resizeTo(750,500);
+          }
+
+          if (selecao =='Estratificada') {
+              ediv = document.getElementById('uniform');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('blockRandomization');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('WChoice');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('Estratification');
+              ediv.style.display = 'block';
+
+              ediv = document.getElementById('planoutScript');
+              ediv.style.display = 'none';
+
+              document.getElementById('strategyEstratification').value = 'Estratificada';
+              window.resizeTo(750,500);
+          }
+
+          if (selecao =='customizada') {
+              ediv = document.getElementById('uniform');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('blockRandomization');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('WChoice');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('Estratification');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('planoutScript');
+              ediv.style.display = 'block';
+
+              // redimenciona a janela
+              window.moveTo(0, 0);
+              window.resizeTo(screen.availWidth, screen.availHeight);
           }
 
 
@@ -186,19 +389,109 @@
 
 
     if (strat =='Block') {
-        e.selectedIndex = 0
+        e.selectedIndex = 0;
     }
 
     if (strat =='UniformChoice') {
-        e.selectedIndex = 1
+        e.selectedIndex = 1;
     }
 
     if (strat =='WeightedChoice') {
-        e.selectedIndex = 2
+        e.selectedIndex = 2;
     }
+    if (strat =='Estratificada') {
+        e.selectedIndex = 3;
+    }
+
+    if (strat =='customizada') {
+        e.selectedIndex = 4;
+    }
+
+
 
     // Atualiza o DIV
     updateMainDiv();
+
+
+
+    // Funções da randomização estratificada
+
+    var selectAdd = "<select id='addfact' name='Nameaddfact'> <option value='Sexo'>Sexo</option> <option value='Idade'>Idade</option><option value='Cidade'>Cidade</option></select><input type='button' value='+'' onclick='addColFactor(rowactual);' />";
+
+
+    function adicionarFator()
+    {
+      var table = document.getElementById("factorscriteria");
+      {
+
+        var tamanhoatual = document.getElementById("factorscriteria").rows.length;
+
+        var row = table.insertRow(-1);
+        var cell1 = row.insertCell(0);
+        var cell2 = row.insertCell(1);
+        var cell3 = row.insertCell(2);
+        var cell4 = row.insertCell(3);
+        var cell5 = row.insertCell(4);
+
+        var el = document.getElementById("tipoFator");
+        var selecaoFator = el.options[el.selectedIndex].value;
+
+        if(selecaoFator == 'Sexo')
+        {
+          cell1.innerHTML = cellSexo.replace('coltype','row'+tamanhoatual);
+          cell2.innerHTML = cellSexoCondition.replace('sexo', 'sexo'+tamanhoatual);
+          cell3.innerHTML = selectAdd.replace('rowactual',tamanhoatual).replace('addfact', 'addfact'+tamanhoatual).replace('Nameaddfact','Nameaddfact'+tamanhoatual);
+          cell4.innerHTML = "";
+        } else if ( selecaoFator == 'Idade' ) {
+          cell1.innerHTML = cellIdade.replace('coltype','row'+tamanhoatual);
+          cell2.innerHTML = cellIdadeCondition.replace('idade', 'idade'+tamanhoatual).replace('Valoridade', 'Valoridade'+tamanhoatual);
+          cell3.innerHTML = selectAdd.replace('rowactual',tamanhoatual).replace('addfact', 'addfact'+tamanhoatual).replace('Nameaddfact','Nameaddfact'+tamanhoatual);
+          cell4.innerHTML = "";
+        } else if (selecaoFator == 'Cidade' ) {
+          cell1.innerHTML = cellCidade.replace('coltype','row'+tamanhoatual);
+          cell2.innerHTML = cellCidadeCondition.replace('cidade', 'cidade'+tamanhoatual);
+          cell3.innerHTML = selectAdd.replace('rowactual',tamanhoatual).replace('addfact', 'addfact'+tamanhoatual).replace('Nameaddfact','Nameaddfact'+tamanhoatual);
+          cell4.innerHTML = "";
+        }
+
+        $(cell1).attr('id', '1fat_row'+tamanhoatual);
+
+        $("#lenfactors").attr('value', tamanhoatual);
+
+        cell5.innerHTML = "<input type='button' value='Remover' onClick='$(this).parent().parent().remove();'>";
+      }
+    }
+
+      function addColFactor(rowactual)
+      {
+        var mytable = document.getElementById("factorscriteria");
+
+        // Pega e adiciona de acordo com o valor do select
+        var el = document.getElementById("addfact"+rowactual);
+        var selecaoFator = el.options[el.selectedIndex].value;
+
+        if (selecaoFator == 'Sexo') {
+          mytable.rows[rowactual].cells[2].innerHTML = cellSexo.replace('coltype',1+'row'+rowactual);
+          mytable.rows[rowactual].cells[3].innerHTML = cellSexoCondition.replace('sexo', 1+'sexo'+rowactual);
+        } else if ( selecaoFator == 'Idade' ) {
+          mytable.rows[rowactual].cells[2].innerHTML = cellIdade.replace('coltype',1+'row'+rowactual);
+          mytable.rows[rowactual].cells[3].innerHTML = cellIdadeCondition.replace('idade', 1+'idade'+rowactual).replace('Valoridade', 1+'Valoridade'+rowactual);
+        } else if ( selecaoFator == 'Cidade' ) {
+          mytable.rows[rowactual].cells[2].innerHTML = cellCidade.replace('coltype',1+'row'+rowactual);
+          mytable.rows[rowactual].cells[3].innerHTML = cellCidadeCondition.replace('cidade', 1+'cidade'+rowactual);
+        }
+
+        $(mytable.rows[rowactual].cells[2]).attr('id', '2fat_row'+rowactual);
+      }
+
+      var cellSexo = "Sexo<input type='hidden' name='coltype' value='Sexo' />";
+      var cellSexoCondition ="<select name='sexo'> <option value='m'>Masculino</option> <option value='f'>Feminino</option><select>";
+
+      var cellIdade = "Idade<input type='hidden' name='coltype' value='Idade' />" ;
+      var cellIdadeCondition = "<select name='idade'> <option>></option> <option>>=</option> <option><</option> <option><=</option></select> <input type='text' name='Valoridade' />";
+
+      var cellCidade="Cidade<input type='hidden' name='coltype' value='Cidade' />";
+      var cellCidadeCondition = "<select name='cidade'> <option>São Paulo-SP</option><option>Belo Horizonte-MG</option></select>";
 
 </script>
 
