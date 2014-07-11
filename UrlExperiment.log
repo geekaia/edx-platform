@@ -95,3 +95,4 @@
 {"inputs": {"userid": 22}, "name": "UrlExperiment", "checksum": "4a2b2b24", "params": {"URL": "1fe9a57242fc49e489d8332dc0e021ed"}, "time": 1404494702, "salt": "UrlExperiment", "event": "exposure"}
 {"inputs": {"userid": 23}, "name": "UrlExperiment", "checksum": "4a2b2b24", "params": {"URL": "bab86aa1976e46e894cb39cb038bc30e"}, "time": 1404494903, "salt": "UrlExperiment", "event": "exposure"}
 {"inputs": {"userid": 24}, "name": "UrlExperiment", "checksum": "4a2b2b24", "params": {"URL": "bab86aa1976e46e894cb39cb038bc30e"}, "time": 1404495191, "salt": "UrlExperiment", "event": "exposure"}
+{"inputs": {"userid": 19}, "name": "UrlExperiment", "checksum": "34b89155", "params": {"URL": "7b518ed066dd4a6c977545dff1527bcf"}, "time": 1405119238, "salt": "UrlExperiment", "event": "exposure"}

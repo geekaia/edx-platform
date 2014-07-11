@@ -279,22 +279,25 @@ def cadastraVersao(user,URL,urlExp ):
         #     print "Erro do tipo ({0}): {1}".format(e.errno, e.strerror)
         #
         except:
+            print "tamanho url ", len(URLChoice)
             print "Unexpected error1:", sys.exc_info()[0]
 
         # Houver um erro em algumas das randomizações
-        if deuerro :
-            def assign(self, params, userid):
-                params.URL = UniformChoice(choices=CHOICESG, unit=userid)
+        if len(URLChoice) == 0 :
+            class UrlExperiment(SimpleExperiment):
+                def assign(self, params, userid):
+                    params.URL = UniformChoice(choices=CHOICESG, unit=userid)
 
             exp = UrlExperiment(userid=user.id)
 
             try:
                 URLChoice = exp.get('URL')
+                bloco=-3
             except:
                 print "Unexpected error3:", sys.exc_info()[0]
 
 
-        print "URLChoice: ", URLChoice
+        print "URLChoice: ", URLChoice, ' len: ',len(URLChoice)
 
         # num = randint(1,2)
         num = CHOICES.index(URLChoice)
