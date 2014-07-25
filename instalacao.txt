@@ -144,8 +144,7 @@ SERVICE_VARIANT=cms rake cms:gather_assets:aws
 Veja o status das aplicações 
 
 
-sudo /edx/bin/supervisorctl -c /edx/etc/supervisord.conf status edxapp:
-
+sudo /edx/bin/supervisorctl -c /edx/etc/supervisord.conf status 
 
 inicie novamente os serviços 
 sudo service nginx stop
@@ -203,5 +202,14 @@ com o valor
 in cms.env.json and lms.env.json, then restarting using 
 sudo /edx/bin/supervisorctl restart all
 
+
+
+
+
+Para resolver o problema do MONGODB em caso de desligamento acidental ou não
+sudo su 
+cd /edx/var/mongo/mongodb 
+sudo chown -R mongodb:mongodb  .  
+sudo service mongodb start
 
 
