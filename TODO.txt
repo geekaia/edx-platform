@@ -1,11 +1,11 @@
-
-
 CMS
    -- Port CMS new edX  - Ok
-   -- Configure IP  to preview in LMS - OK
+   -- Configure IP  to preview in LMS - Ok
    -- Extrair informações de módulos que não tem nenhum experimento
+   -- Documentar o que já foi feito 
+   -- Pegar dados estatísticos dos alunos matriculados no Curso 
 
-
+ 
 LMS
    -- Port LMS to new edX - OK
 
