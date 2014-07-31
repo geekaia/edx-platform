@@ -56,8 +56,37 @@ template_imports = {'urllib': urllib}
 CONTENT_DEPTH = 2
 
 from experiments.utils import VerABprint
-import threading
 
+
+
+
+
+import threading
+from threading import Thread
+
+# Global Thread
+lock = threading.Lock()
+
+
+class CadVersao(Thread):
+
+    def __init__(self, chapter, usuario):
+        Thread.__init__(self)
+        self.chapter=chapter
+        self.usuario=usuario
+
+    def run(self):
+        chapter=self.chapter
+        usuario=self.usuario
+
+        lock.acquire() #acquire the lock
+
+        self.vercad = VerABprint(chapter, usuario)
+
+        lock.release()
+
+    def getResult(self):
+        return self.vercad
 
 
 def user_groups(user):
@@ -119,10 +148,10 @@ def render_accordion(request, course, chapter, section, field_data_cache):
     cont=0
 
     for chapter in toc:
-        imprimir = VerABprint(chapter['url_name'], request.user)
-
-        print "____________________ IMPRIMIR? ___________________________"
-        print imprimir
+        mythread = CadVersao(chapter['url_name'], request.user)
+        mythread.start()
+        mythread.join()
+        imprimir = mythread.getResult()
 
         if imprimir == False:
             del toc[cont]
@@ -264,7 +293,7 @@ def chat_settings(course, user):
         ),
     }
 
-lock = threading.Lock()
+
 
 @login_required
 @ensure_csrf_cookie
@@ -330,9 +359,11 @@ def index(request, course_id, chapter=None, section=None,
 
         print "EU ENTREI AQUI NO INDEX"
 
-        with lock:
-            for chp in toc:
-                IMP = VerABprint(chp['url_name'], request.user)
+
+        for chp in toc:
+            mythread = CadVersao(chp['url_name'], request.user)
+            mythread.start()
+            mythread.join()
 
 
 
