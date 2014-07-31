@@ -23,7 +23,8 @@
               <option value="UniformChoice">Uniform</option>
               <option value="WeightedChoice">Proportion</option>
               <option value="Estratificada">Estratificada</option>
-              <option value="customizada">Customizada</option>
+              <option value="planOut">planOut Script</option>
+              <option value="customdesign">Customizada</option>
             </select>
         </td>
     </tr>
@@ -58,10 +59,11 @@
         Percentagem Arm A <input type="text" name="peso1" value="${strat.percent1}" />
         <br>
         Percentagem Arm B <input type="text" name="peso2" value="${strat.percent2}" />
-
         <br />
+
         <font color="blue">${mensagemWeightedChoice}</font>
 
+        <br />
         <br />
         ${mensagem}
 
@@ -122,7 +124,6 @@
 
     <form method="POST" id="myformEstrat">
 
-
         <!-- Evita o erro dos Tokens -->
         <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}" />
          <input type="hidden" id="strategyEstratification" name='strategySel' value="Estratificada" />
@@ -165,6 +166,32 @@
 </div>
 
 
+<div id="customizada">
+  <table border='0'>
+    <tr>
+        <td>Com este design é possível colar um Desin de experimento customizado gerado pelo Minitab, JMP ou R. A única regra é que na primeira linha deve constar o <b>título</b> do campo e as colunas devem ser separadas por vírgula.
+  <br /> </td>
+    </tr>
+      <tr>
+        <td>Obs.: A primeira é a da versão (0 para A e 1 para B). Será considerado a randomização Uniform em caso de excessões.</td>
+      </tr>
+  </table>
+
+
+  <br />
+
+  <form id="customForm" method="POST">
+      Design do experimento
+      <br />
+      <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}" />
+      <input type="hidden" id="strategyEstratification" name='strategySel' value="customdesign" />
+      <textarea id="customDesign" name="customDesign" rows="30"  cols="80">${strat.customDesign}</textarea>
+      <br />
+      <input type="submit" id="salvar" value="Salvar" />
+  </form>
+</div>
+
+
 <div id="planoutScript">
 
 <table border="1">
@@ -191,7 +218,7 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
 
         <form method="POST">
             <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}" />
-            <input type="hidden" id="strategyEstratification" name='strategySel' value="customizada" />
+            <input type="hidden" id="strategyEstratification" name='strategySel' value="planOut" />
 
             <table border="0">
                 <tr>
@@ -216,6 +243,7 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
     <br />
     <br />
 </div>
+
 
 
 
@@ -289,6 +317,9 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
               ediv = document.getElementById('planoutScript');
               ediv.style.display = 'none';
 
+              ediv = document.getElementById('customizada');
+              ediv.style.display = 'none';
+
               document.getElementById('strategySelblock').value = 'Block';
               window.resizeTo(750,500);
 
@@ -309,6 +340,9 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
               ediv.style.display = 'none';
 
               ediv = document.getElementById('planoutScript');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('customizada');
               ediv.style.display = 'none';
 
               document.getElementById('strategySelUfChoice').value = 'UniformChoice';
@@ -332,6 +366,9 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
               ediv = document.getElementById('planoutScript');
               ediv.style.display = 'none';
 
+              ediv = document.getElementById('customizada');
+              ediv.style.display = 'none';
+
               document.getElementById('strategySelWChoice').value = 'WeightedChoice';
                window.resizeTo(750,500);
           }
@@ -352,11 +389,40 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
               ediv = document.getElementById('planoutScript');
               ediv.style.display = 'none';
 
+              ediv = document.getElementById('customizada');
+              ediv.style.display = 'none';
+
               document.getElementById('strategyEstratification').value = 'Estratificada';
               window.resizeTo(750,500);
           }
 
-          if (selecao =='customizada') {
+
+          if (selecao =='planOut') {
+              ediv = document.getElementById('uniform');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('blockRandomization');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('WChoice');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('Estratification');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('customizada');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('planoutScript');
+              ediv.style.display = 'block';
+
+              // redimenciona a janela
+              window.moveTo(0, 0);
+              window.resizeTo(screen.availWidth, screen.availHeight);
+          }
+
+
+        if (selecao =='customdesign') {
               ediv = document.getElementById('uniform');
               ediv.style.display = 'none';
 
@@ -370,13 +436,15 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
               ediv.style.display = 'none';
 
               ediv = document.getElementById('planoutScript');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('customizada');
               ediv.style.display = 'block';
 
               // redimenciona a janela
               window.moveTo(0, 0);
               window.resizeTo(screen.availWidth, screen.availHeight);
-          }
-
+        }
 
     }
 
@@ -403,11 +471,13 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
         e.selectedIndex = 3;
     }
 
-    if (strat =='customizada') {
+    if (strat =='planOut') {
         e.selectedIndex = 4;
     }
 
-
+    if (strat =='customdesign') {
+        e.selectedIndex = 5;
+    }
 
     // Atualiza o DIV
     updateMainDiv();

@@ -20,9 +20,12 @@ class StrategyRandomization(models.Model):
     fatorList = models.CharField(max_length=600, null=True)
     quantAlunoStrats = models.IntegerField(blank=True, null=True)
 
-    # Customizada
+    # PlanoutScript
     planoutScript = models.TextField(blank=True, null=True)
     planoutJson = models.TextField(blank=True, null=True)
+
+    # Customizada --campo gerado por softwares como o JMP, SAS e R, o que possibilita criar todo tipo de randomização
+    customDesign = models.TextField(blank=True, null=True)
 
 
 class ExperimentDefinition(models.Model):

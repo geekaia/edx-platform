@@ -44,9 +44,5 @@
 </%def>
 
 % for chapter in toc:
-            <% imprimir = VerABprint(chapter['url_name'], user) %>
-
-            % if imprimir:
-                ${make_chapter(chapter)}
-            % endif
+      ${make_chapter(chapter)}
 % endfor

@@ -53,7 +53,6 @@ CREATE_IF_NOT_FOUND = ['course_info']
 log = logging.getLogger(__name__)
 
 @require_GET
-@ensure_csrf_cookie
 @login_required
 def EmailsExp(request,  course_key_string, idExp=None):
 
@@ -100,7 +99,6 @@ def EmailsExp(request,  course_key_string, idExp=None):
             print "Erro ao pegar o exp"
 
 
-
 @ensure_csrf_cookie
 @login_required
 def DefineStrategy(request,  course_key_string, idExperiment=None):
@@ -143,11 +141,12 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
 
                 strategy.percent1 = float(request.POST['peso1'])
                 strategy.percent2 = float(request.POST['peso2'])
-
                 strategy.save()
 
                 mensagemWeightedChoice = "WeightedChoice Salvo!"
-            elif strategySel == 'customizada':
+            elif strategySel == 'planOut':
+
+                # Este Design ainda não está funcionando apropriadamente
                 strategy.planoutScript = request.POST['input']
                 strategy.planoutJson = request.POST['output']
                 strategy.save()
@@ -159,97 +158,101 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
 
                 print "A estratégia é UniformChoice"
                 mensagemUniformChoice = "UniformChoice Salvo!"
-
-            elif strategySel == 'Block':
-                print "A estratégia é Block"
-                strategy.quantAlunos = int(request.POST['quantAlunos'])
-                strategy.tamanhoBlocos = int(request.POST['tamanhoBlocos'])
-                strategy.quantBlocos = int(strategy.quantAlunos/strategy.tamanhoBlocos)
-
-                mensagemBlock = "BlockChoice Salvo!"
-
+            #
+            # elif strategySel == 'Block':
+            #     print "A estratégia é Block"
+            #     strategy.quantAlunos = int(request.POST['quantAlunos'])
+            #     strategy.tamanhoBlocos = int(request.POST['tamanhoBlocos'])
+            #     strategy.quantBlocos = int(strategy.quantAlunos/strategy.tamanhoBlocos)
+            #
+            #     mensagemBlock = "BlockChoice Salvo!"
+            #
+            #     strategy.save()
+            
+            elif strategySel == 'customdesign':
+                strategy.customDesign = request.POST['customDesign']
                 strategy.save()
 
-            elif strategySel == 'Estratificada':
-
-                print "A minha opção é estratificada"
-
-                # Quantidade de alunos dos Strats
-                strategy.quantAlunoStrats = int(request.POST['quantAlunoStrats'])
-
-                # Quant rows experiments
-                rowsStrat = int(request.POST['lenfactors'])
-
-                print "Len factors", rowsStrat, 'range: ', range(1, rowsStrat+1)
-
-                fatorList = []
-
-                for i in range(1, rowsStrat+1):
-
-                    fatoresLine =[]
-
-                    # Primeira coluna
-                    col1Type = request.POST['row'+str(i)]
-
-                    print "Valor do primeiro fator", col1Type
-
-                    myfactor = getListLine(col1Type, i, request, '')
-
-                    print "My Factor: ", myfactor
-
-                    fatoresLine.append(myfactor)
-
-                    # Terceira coluna
-                    # verifica se há algum fator que é combinado com o primeiro
-                    tem=True
-
-                    try:
-                        val = request.POST['Nameaddfact'+str(i)]
-                        tem = False
-                    except:
-                        print 'Aconteceu uma exceção. Por isso, há um outro fator'
-                        tem = True
-
-                    # Tem que fazer isso pq o segundo fator é opcional
-                    print "Tem?: ", tem
-
-
-                    if tem == True:
-
-                        col2Type = request.POST['1row'+str(i)]
-
-                        print "Tipo segundo fator ", col2Type
-
-                        fatoresLine.append(getListLine(col2Type, i, request, '1'))
-                        print "Eu consegui adicionar"
-
-
-                    fatorList.append(','.join(fatoresLine))
-
-
-                print "\nLista final de fatores por linha ", fatorList, '\n'
-
-                fatorescondition = ';'.join(fatorList)
-
-
-                # Agora irei salvar a lista de todas as informações
-                strategy.fatorList = fatorescondition
-
-                print
-                print "Lista final om todos os fatores como String: ", strategy.fatorList
-                print
-
-                strategy.save()
-                mensagem = 'Estratégia estratificada salva com sucesso!!!!'
-
-                print "Deu certo em salvar a estratégia "
-                # Para voltar a ser list tem que fazer o split ; depois , e depois |
-
-
-                print "A minha escolha é estratificada"
+            # elif strategySel == 'Estratificada':
+            #
+            #     print "A minha opção é estratificada"
+            #
+            #     # Quantidade de alunos dos Strats
+            #     strategy.quantAlunoStrats = int(request.POST['quantAlunoStrats'])
+            #
+            #     # Quant rows experiments
+            #     rowsStrat = int(request.POST['lenfactors'])
+            #
+            #     print "Len factors", rowsStrat, 'range: ', range(1, rowsStrat+1)
+            #
+            #     fatorList = []
+            #
+            #     for i in range(1, rowsStrat+1):
+            #
+            #         fatoresLine =[]
+            #
+            #         # Primeira coluna
+            #         col1Type = request.POST['row'+str(i)]
+            #
+            #         print "Valor do primeiro fator", col1Type
+            #
+            #         myfactor = getListLine(col1Type, i, request, '')
+            #
+            #         print "My Factor: ", myfactor
+            #
+            #         fatoresLine.append(myfactor)
+            #
+            #         # Terceira coluna
+            #         # verifica se há algum fator que é combinado com o primeiro
+            #         tem=True
+            #
+            #         try:
+            #             val = request.POST['Nameaddfact'+str(i)]
+            #             tem = False
+            #         except:
+            #             print 'Aconteceu uma exceção. Por isso, há um outro fator'
+            #             tem = True
+            #
+            #         # Tem que fazer isso pq o segundo fator é opcional
+            #         print "Tem?: ", tem
+            #
+            #
+            #         if tem == True:
+            #
+            #             col2Type = request.POST['1row'+str(i)]
+            #
+            #             print "Tipo segundo fator ", col2Type
+            #
+            #             fatoresLine.append(getListLine(col2Type, i, request, '1'))
+            #             print "Eu consegui adicionar"
+            #
+            #
+            #         fatorList.append(','.join(fatoresLine))
+            #
+            #
+            #     print "\nLista final de fatores por linha ", fatorList, '\n'
+            #
+            #     fatorescondition = ';'.join(fatorList)
+            #
+            #
+            #     # Agora irei salvar a lista de todas as informações
+            #     strategy.fatorList = fatorescondition
+            #
+            #     print
+            #     print "Lista final om todos os fatores como String: ", strategy.fatorList
+            #     print
+            #
+            #     strategy.save()
+            #     mensagem = 'Estratégia estratificada salva com sucesso!!!!'
+            #
+            #     print "Deu certo em salvar a estratégia "
+            #     # Para voltar a ser list tem que fazer o split ; depois , e depois |
+            #
+            #
+            #     print "A minha escolha é estratificada"
 
     except:
-        mensagem = 'Ocorreu um erro ao cadastrar o usuário!!!'
+        mensagem = 'Ocorreu um erro ao salvar a estratégia!!!'
 
 
         # exp = ExperimentDefinition.objects.get(userTeacher=request.user, id=idExperiment)

@@ -26,7 +26,12 @@ from datetime import date
 #         print "asdfasdfasdf"
 #     except:
 #         return 0
+from django.db import transaction
 
+import threading
+
+
+lock = threading.Lock()
 
 def cadastraVersao(user,URL,urlExp ):
 
@@ -40,6 +45,7 @@ def cadastraVersao(user,URL,urlExp ):
 
 
         listBLOCOS = []
+        URLChoice=""
 
         max=0
         curso = None
@@ -66,6 +72,8 @@ def cadastraVersao(user,URL,urlExp ):
 
             if lenV[opc.version] >= max:
                 max = lenV[opc.version]
+
+
 
         print "CHOICES: ", CHOICES
 
@@ -102,9 +110,71 @@ def cadastraVersao(user,URL,urlExp ):
             ct = float(strat.percent1)
             print "Casting: ", ct, ' type: ', type(ct)
             exp = UrlExperimentWeighted(userid=user.id)
+        elif strat.strategyType == 'customdesign':
 
-        elif strat.strategyType == 'customizada':
-            print "Estratégia é a Customizada "
+            print "A estratégia é CustomDesign"
+            try:
+                # Script:
+                # Pega a quantidade de versões para este design deste experimento
+                # Confronta com a do Design
+
+                linhas = strat.customDesign.splitlines()
+                tamL = len(linhas)
+
+                print "TamL: ", tamL
+
+                # usuarios versão experimento
+                choicesSelUsr = UserChoiceExperiment.objects.filter(experimento=ExpPart)
+                lenC = len(choicesSelUsr)+1
+                print "lenC: ", lenC
+
+                print "Type: ", type(linhas)
+
+                print "All"
+                # for L in linhas:
+                #     print L
+
+
+                linRand = linhas[lenC]
+                print "linRand: ", linRand
+
+                verL = linRand.split(',')[0]
+                print "verL: ", verL
+
+                # convert to int
+                ver = int(verL)
+
+                print "ver: ", ver
+
+                if ver == 0:
+                    versao ='A'
+
+                else:
+                    versao = 'B'
+
+                URLChoice = CHOICESG[ver]
+
+                achei = True
+                conversao = True
+                deuerro = False
+
+                print "Versão selecionada: ", versao
+
+
+
+            except:
+                print "Deu Merda na leitura do campo"
+                deuerro = True
+
+
+
+            # Para toda e qualquer excesso será considerada a Randomização Uniforme
+
+
+
+
+        elif strat.strategyType == 'planOut':
+            print "Estratégia é a planOut"
 
             try:
                 class SimpleInterpretedExperiment(SimpleExperiment):
@@ -179,18 +249,16 @@ def cadastraVersao(user,URL,urlExp ):
             # Procura em um arm para ver se há algum que tenha
             while achei != True:
 
-                print "AÇLSDJFLKJASLKDFJLKASJDLFKASDF ENTREI NO LOOP "
 
                 class BlocosChoice(SimpleExperiment):
                   def assign(self, params, userid):
                     params.BLOCOCHOICE = UniformChoice(choices=listBLOCOS, unit=userid)
 
-                print "Olá mundo Cruel!asdfffffffffffffffffffffffffffffffffffffffff!!"
+
 
                 bk = BlocosChoice(userid=user.id)
-                print "asldjflkjasldkfjlkasjdflka jsldkf jlaskdf j"
+
                 bloco  = bk.get('BLOCOCHOICE')
-                print "asldfjlkasjdlkfjaslkdfjl"
 
 
                 print "Bloco selecionado: ", bloco
@@ -267,14 +335,15 @@ def cadastraVersao(user,URL,urlExp ):
 
                     print " Else Fim   achei", achei, ' conversao ', conversao
 
-        URLChoice=""
+
 
         print "Vamos pegar a URLChoice "
 
         try:
 
-            URLChoice = exp.get('URL')
-            print "A minha URL é:::: ", URLChoice
+            if len(URLChoice) != 0:
+                URLChoice = exp.get('URL')
+                print "A minha URL é:::: ", URLChoice
         # except TypeError as e:
         #     print "Erro do tipo ({0}): {1}".format(e.errno, e.strerror)
         #
@@ -348,7 +417,27 @@ def cadastraVersao(user,URL,urlExp ):
         userVersion.bloco = bloco # Vai depender do algoritmo
         userVersion.versionExp = options[versao]
         userVersion.experimento = urlExp.experimento
-        userVersion.save()
+
+        # Verifica se nao ha nenhuma entrada deste experimento
+
+        verCads = UserChoiceExperiment.objects.filter(experimento=urlExp.experimento, userStudent=user)
+
+        print "TAMANHO DAS ENTRADAS ", verCads
+
+        if len(verCads) > 0:
+            cont = 0
+            for verCad in verCads:
+
+                if cont > 1:
+                    print "Deleting ", cont
+                    verCad.delete()
+                else:
+                    userVersion = verCad
+
+                cont = cont+1
+        else:
+            userVersion.save()
+
 
         # print Versão escolhida
         print "Versão escolhida: ", userVersion.versionExp.sectionExp_url
@@ -389,20 +478,33 @@ def VerABprint(URL, user):
         print "URL testada", URL, "Usuario: ", user
         urlExp = OpcoesExperiment.objects.get(sectionExp_url=URL)
 
+        expsChoices = UserChoiceExperiment.objects.filter(experimento=urlExp.experimento, userStudent=user)
+
+        if len(expsChoices) > 1:
+            cont=0
+            for expsC in expsChoices:
+                if cont > 0:
+                    print "Deletei ", cont
+                    expsC.delete()
+
+                cont  = cont + 1
+
         # Se faz parte, procura-se na base de dados pela URL
         # Verifica se esta URL foi escolhida pelo usuario
         try:
             # Se o experimento desta URL já foi escolhida pelo aluno como
-            expsChoices = UserChoiceExperiment.objects.filter(experimento=urlExp.experimento, userStudent=user)
+
 
             # Só será considerado TRUE se for igual a URL
-            print "Tamanho da dos Registros: ",  len(expsChoices)
-            print "Tamanho da dos Registros: ",  len(expsChoices)
+            print "Tamanho dos Registros: ",  len(expsChoices)
+
 
 
             if len(expsChoices) == 1: # 1 pq o usuário só pode escolher 1 versão do experimento
                 # Verifica-se se a opção do experimento é a atual
                 # sempre pega o primeiro registro, pois só pode ter 1
+
+
                 if expsChoices[0].versionExp.sectionExp_url == URL: # A variável do Experimento tb deve ser igual
                     print "Primeiro"
                     return True
@@ -411,16 +513,21 @@ def VerABprint(URL, user):
                     return False
             else:
                 if len(expsChoices) == 0:
+
+                    print "Vamos cadastrar com um Thread"
                     return cadastraVersao(user,URL,urlExp)
                 else:
                     print "Terceiro"
                     return False
 
         except:
-            # Neste ponto o usuário não o selecionou uma opção, então deve-se
-            # Atribuir a este usuário uma versão
-
-            return cadastraVersao(user,URL,urlExp)
+            if len(expsChoices) == 0:
+                # Neste ponto o usuário não o selecionou uma opção, então deve-se
+                # Atribuir a este usuário uma versão
+                print "Cadastrando com thread 2"
+                return cadastraVersao(user,URL,urlExp)
+            else:
+                return False
 
 
     except:

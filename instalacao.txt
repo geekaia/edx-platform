@@ -210,6 +210,7 @@ Para resolver o problema do MONGODB em caso de desligamento acidental ou não
 sudo su 
 cd /edx/var/mongo/mongodb 
 sudo chown -R mongodb:mongodb  .  
-sudo service mongodb start
+rm mongod.lock
+sudo service mongodb restart
 
 

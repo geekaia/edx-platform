@@ -55,6 +55,11 @@ template_imports = {'urllib': urllib}
 
 CONTENT_DEPTH = 2
 
+from experiments.utils import VerABprint
+import threading
+
+
+
 def user_groups(user):
     """
     TODO (vshnayder): This is not used. When we have a new plan for groups, adjust appropriately.
@@ -105,6 +110,30 @@ def render_accordion(request, course, chapter, section, field_data_cache):
     user = User.objects.prefetch_related("groups").get(id=request.user.id)
     request.user = user	 # keep just one instance of User
     toc = toc_for_course(user, request, course, chapter, section, field_data_cache)
+
+    # Passa somente o que e para passar
+
+
+    print "Estou no Render Acordion"
+
+    cont=0
+
+    for chapter in toc:
+        imprimir = VerABprint(chapter['url_name'], request.user)
+
+        print "____________________ IMPRIMIR? ___________________________"
+        print imprimir
+
+        if imprimir == False:
+            del toc[cont]
+
+        cont = cont+1
+
+
+
+
+
+
 
     context = dict([
         ('toc', toc),
@@ -235,6 +264,7 @@ def chat_settings(course, user):
         ),
     }
 
+lock = threading.Lock()
 
 @login_required
 @ensure_csrf_cookie
@@ -269,6 +299,10 @@ def index(request, course_id, chapter=None, section=None,
     course = get_course_with_access(user, 'load', course_key, depth=2)
     staff_access = has_access(user, 'staff', course)
     registered = registered_for_course(course, user)
+
+
+
+
     if not registered:
         # TODO (vshnayder): do course instructors need to be registered to see course?
         log.debug(u'User %s tried to view course %s but is not enrolled', user, course.location.to_deprecated_string())
@@ -287,6 +321,20 @@ def index(request, course_id, chapter=None, section=None,
             return redirect(reverse('about_course', args=[course_key.to_deprecated_string()]))
 
         studio_url = get_studio_url(course_key, 'course')
+
+
+        # # Intrucoes para os testes AB
+        toc = toc_for_course(user, request, course, chapter, section, field_data_cache)
+
+        # Passa somente o que e para passar
+
+        print "EU ENTREI AQUI NO INDEX"
+
+        with lock:
+            for chp in toc:
+                IMP = VerABprint(chp['url_name'], request.user)
+
+
 
         context = {
             'csrf': csrf(request)['csrf_token'],
@@ -508,11 +556,19 @@ def course_info(request, course_id):
     Assumes the course_id is in a valid format.
     """
     course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+
     course = get_course_with_access(request.user, 'load', course_key)
+
+    print "Curso Location", course.location
+
     staff_access = has_access(request.user, 'staff', course)
     masq = setup_masquerade(request, staff_access)    # allow staff to toggle masquerade on info page
     reverifications = fetch_reverify_banner_info(request, course_key)
     studio_url = get_studio_url(course_key, 'course_info')
+
+    # verifica se tem alguma versao para cadastrar
+
+
 
     context = {
         'request': request,
