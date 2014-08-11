@@ -167,7 +167,6 @@ INSERT INTO `auth_userprofile` VALUES (2,1,'honor','','','','course.xml',NULL,NU
 
 
 
-
 # Para ver os bugs 
 tail -f /edx/var/log/{lms,cms,nginx}/*log
 

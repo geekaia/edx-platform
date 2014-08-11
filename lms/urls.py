@@ -81,7 +81,7 @@ urlpatterns += (
 urlpatterns += (
      # url(r'^/expAnalise/(?P<idExp>\d+)/$','experimentslms.views.expAnalise', name="expAnalise"),
      url(r'^courses/(?P<course_id>[^/]+/[^/]+/[^/]+)/expAnalise/(?P<idExp>\d+)/$',  'experimentslms.views.expAnalise', name="expAnalise"),
-
+     url(r'^courses/(?P<course_id>[^/]+/[^/]+/[^/]+)/DesignAsCSV/(?P<idExp>\d+)/$',  'experimentslms.views.DesignAsCSV', name="DesignAsCSV"),
 )
 
 

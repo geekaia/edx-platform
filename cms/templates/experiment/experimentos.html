@@ -51,20 +51,19 @@
                                 <div>
                                 <ul>
                                   <li class="action-item action-view-results">
-                                        <a href="${lms_link.split('jump_to')[0]}expAnalise/${exp.id}/" class="button action-primary action">${_("View Results")}</a>
+                                        <a href="${lms_link.split('jump_to')[0]}expAnalise/${exp.id}/" class="button action-primary action">${_("View Results as CSV")}</a>
+                                        <br />
+                                        <a href="${lms_link.split('jump_to')[0]}DesignAsCSV/${exp.id}/" class="button action-primary action">${_("View Design Results as CSV")}</a>
                                         <br />
                                         <a href="experiments/${exp.id}" class="button action-primary action">${_("Emails")}</a>
                                         % if showdefine:
-                                        <br />
-                                        <a href="#" onClick="window.open('../definestrategy/${course_key_string}/${exp.id}','expdefinition','width=750,height=500,location=no')" class="button action-primary action">${_("Define Strategy")}</a>
-                                         <% showdefine = False %>
+                                           <br />
+                                           <a href="#" onClick="window.open('../definestrategy/${course_key_string}/${exp.id}','expdefinition','width=750,height=500,location=no')" class="button action-primary action">${_("Define Strategy")}</a>
+                                           <% showdefine = False %>
                                         % endif
                                         <br />
                                         <a href="${lms_link.split('jump_to')[0]}instructor/api/get_students_features/csv" class="button action-primary action">${_("View Profile Information as CSV")}</a>
-
                                   </li>
-
-
                                 </ul>
                                 </div>
                             </td>
@@ -72,7 +71,7 @@
                % endfor
 
     </tbody>
-                </table>
+    </table>
 
       <!--Nome: <div id="nome"> </div>-->
             </article>

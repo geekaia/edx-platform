@@ -100,3 +100,4 @@
 {"inputs": {"userid": 22}, "name": "UrlExperiment", "checksum": "34b89155", "params": {"URL": "7b518ed066dd4a6c977545dff1527bcf"}, "time": 1406047015, "salt": "UrlExperiment", "event": "exposure"}
 {"inputs": {"userid": 19}, "name": "UrlExperiment", "checksum": "34b89155", "params": {"URL": "7b518ed066dd4a6c977545dff1527bcf"}, "time": 1406677451, "salt": "UrlExperiment", "event": "exposure"}
 {"inputs": {"userid": 17}, "name": "UrlExperiment", "checksum": "34b89155", "params": {"URL": "84b37b0a5c95474aac484d7e6c8b6228"}, "time": 1406680421, "salt": "UrlExperiment", "event": "exposure"}
+{"inputs": {"userid": 5}, "name": "UrlExperiment", "checksum": "34b89155", "params": {"URL": "5be074e8ba5f467498a2c75c2fecafc4"}, "time": 1407723572, "salt": "UrlExperiment", "event": "exposure"}

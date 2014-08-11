@@ -798,6 +798,8 @@ class CourseDescriptor(CourseFields, SequenceDescriptor):
                     for urlEx in self.urlsexcluir:
                         if url == urlEx:
                             pular = True
+
+
             if pular:
                 continue
 
