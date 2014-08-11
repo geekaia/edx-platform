@@ -482,6 +482,13 @@ a .icon-flip-vertical:before {
 .icon-flag:before {
   content: "\f024";
 }
+
+.icon-flask:before {
+  content: "\f0c3";
+}
+
+
+
 .icon-headphones:before {
   content: "\f025";
 }

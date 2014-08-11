@@ -51,16 +51,33 @@ def toUTF8(val):
 
         return ""
 
+
 @login_required
 def DesignAsCSV(request, course_id,  idExp):
-    """Nesta opçao, mostra imprime o Design com as questoes em colunas. Isto facilita na hora de importar para softwares como Minitab, Jmp e R.
-
-    Sera retorna para o ChoiceUser um arquivo em CSV com arms seguida pela pontuaçao de cada questao.
-    Para cada experimento deverá ser adicionado a mesma quantidade de questões para que o resultado saia corretamente.
-
     """
-    # Lista dos arms
+    Nesta opçao, mostra as questoes em colunas no arquivo CSV. Caso seja utilizado um Design do experimento personalizado, então será considerado a ordem do Design.
+    Isto facilita na hora de importar para softwares como Minitab, Jmp e R.
 
+    Argumentos:
+      request: http request default
+      course_id:  variavel
+      idExp: id do experimento
+
+    No arquivo CSV contera:
+      'user'
+      'location'
+      'city'
+      'country'
+      'gender'
+      'language'
+      'level_of_education'
+      'year_of_birth'
+      'Quest 0'
+      'Quest 1'
+       ...
+    """
+
+    # Lista dos arms
     try:
         # Pega os experimento
         exp = ExperimentDefinition.objects.get(id=int(idExp))
@@ -180,16 +197,8 @@ def DesignAsCSV(request, course_id,  idExp):
 
             writer.writerow(line)
 
-            #
-            # maxActual = len(actualList)
-            #
-            # for i in range(0, maxPossible):
-            #   if i < maxActual:
-            #     print "Val i: ", i
-            #   else:
-            #     print "Vazio. Não devo imprimir nada
-
-        return response # CSV file
+        # CSV file
+        return response
 
 
     except Exception, e:

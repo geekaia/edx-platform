@@ -1,14 +1,14 @@
 
 Tarefas primárias
-   -- Pegar informações de acordo com o design do experimento especificado, o que facilitaria na hora de importar para um software igual ao Minitab, JMP ou R - OK, mas ainda falta TESTAR
+   -- Pegar informações de acordo com o design do experimento especificado, o que facilitaria na hora de importar para um software igual ao Minitab, JMP ou R - OK
    -- Retirar Blocking Design e qualquer referência -- OK
    -- Adicionar um pouco de CSS no código do Strategy Randomization -- OK
    -- Falar para o Ricardo criar um algumas questões e efetuar toda a parte com o edX Ora - Próxima reunião
-   -- Instalar o edX forum e ver se há a necessidade de adicionar um pouco de código -- ???? 
+   -- Instalar o edX forum e ver se há a necessidade de adicionar um pouco de código -- ????
    -- Averiguar o que pode ser feito com o edX forum
    -- Documentar o que já foi feito - PARCIAL
-   -- Permitir que seja adicionado mais uma opção nos testes A/B
-   -- Mudar o ícone para criar um experimento
+   -- Permitir que seja adicionado mais uma opção nos testes A/B -- SEGUNDÁRIO
+   -- Mudar o ícone para criar um experimento ??? ONDE QUE EU MUDO ESSA BAGAÇA
    -- Color um ícone que permita adicionar mais uma opção para o experimento.
    -- Pegar dados estatísticos dos alunos matriculados no Curso 
    -- verificar se é necessário de mais alguma configuração adicional no smtp do servidor e mais algumas configurações do edX LMS que para os links do edX Studio. 

@@ -105,6 +105,7 @@
 	}
 }
 
+
 .duplicate-icon {
    display: inline-block;
    width: 12px;
@@ -141,6 +142,15 @@
 	&.white {
 		background: url(../img/delete-icon-white.png) no-repeat;
 	}
+}
+
+
+.experimento-icon {
+  display: inline-block;
+  width: 10px;
+  height: 12px;
+  margin-right: 2px;
+  background: url(../img/experiment-icon.png) no-repeat;
 }
 
 .drag-handle {
