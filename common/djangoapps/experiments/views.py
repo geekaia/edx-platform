@@ -738,7 +738,6 @@ def block_clone_handler(request, course_key_string):
 
 
                         # Nesta parte faz-se a leitura se e privado ou publico, se publico, seta a variavel como publico
-
                         try:
 
                             print "Vou fazer o translation -- destinationUnit ", destinationUnit
@@ -754,14 +753,6 @@ def block_clone_handler(request, course_key_string):
 
                             try:
                                 existing_itemUnit = storeUnit.get_item(unitLocation)
-                                #
-                                # field = existing_itemUnit.fields['start']
-                                #
-                                # if subsection.start is not None:
-                                #     print "NÃO É NULO "
-                                #     field.write_to(existing_itemUnit, subsection.start)
-                                #
-                                #     storeSection.update_item(existing_itemUnit, request.user.id)
 
                             except:
                                 print "Deu erro"
@@ -791,85 +782,7 @@ def block_clone_handler(request, course_key_string):
 
                         except:
                             print "Erro ao setar publico"
-    #
-    #
-    #
-    #                     # Agora tem que pegar
-    #
-    #
-    #                     # Agora tem que mudar a visi
-    #
-    #
-    #                     # Agora tem que colocar todos os elementos para o público
-    #
-    #
-    #                     #
-    #                     #
-    #                     # # Get metadata and Data
-    #                     # metadatacomp, datacomp, category = getMetadata(
-    #                     #     subsection_location,
-    #                     #     unit_location,
-    #                     #     Newsubsection_location,
-    #                     #     unit.display_name_with_default,
-    #                     #     request.user
-    #                     # )
-    #
-    #
-    #
-    #
-    #
-    #
-    #                     # NewLocatorItem = create_item(NewLocatorItemSubsection, 'vertical', unit.display_name_with_default, request)#, metadatacomp, datacomp)
-    #                     #
-    #                     # unityComponents = unit.get_children()
-    #                     #
-    #                     #
-    #                     #
-    #                     #
-    #                     #
-    #                     # for comp in unityComponents:
-    #                     #
-    #                     #     break
-    #                     #
-    #                     #     print "Componente"
-    #                     #
-    #                     #     comp_locator = loc_mapper().translate_location(course.location.course_id, comp.location, False, True)
-    #                     #      # course_location = loc_mapper().translate_locator_to_location(parent_locator, get_course=True)
-    #                     #
-    #                     #     com_location = loc_mapper().translate_locator_to_location(comp_locator)
-    #                     #     unit_location = loc_mapper().translate_locator_to_location(unit_locator)
-    #                     #     NewLocatorItemLocator = loc_mapper().translate_locator_to_location(NewLocatorItem)
-    #                     #
-    #                     #
-    #                     #
-    #                     #     metadatacomp, datacomp, category = getMetadata(
-    #                     #         unit_location,
-    #                     #         com_location,
-    #                     #         NewLocatorItemLocator,
-    #                     #         comp.display_name,
-    #                     #         request.user
-    #                     #     )
-    #                     #
-    #                     #     create_item(NewLocatorItem, category, comp.display_name_with_default, request, metadatacomp, datacomp)
-    #
-    #
-    #
-    #
-    #                         # course_location = loc_mapper().translate_locator_to_location(BlockUsageLocator(parent_locator), get_course=True)
-    #                         # dest_locator = loc_mapper().translate_location(course_location.course_id, dest_location, False, True)
-    #                         #
-    #                         # # return JsonResponse({"locator": unicode(dest_locator)})
-    #
-    #
-    #             # Finaliza o laço
-    #
-    #             # Agora vem a definição do Experimento
-    #
-    #
-    #             break
-    #
-    #
-    # #
+
     dataR = {'ok': quantidade }
     #
     return JsonResponse(dataR)

@@ -164,6 +164,7 @@ def unit_handler(request, usage_key_string):
         html: return html page for editing a unit
         json: not currently supported
     """
+    print "Usagekey: ", usage_key_string
     if 'text/html' in request.META.get('HTTP_ACCEPT', 'text/html'):
         usage_key = UsageKey.from_string(usage_key_string)
         try:

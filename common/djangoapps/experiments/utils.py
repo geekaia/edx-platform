@@ -28,9 +28,12 @@ from datetime import date
 #         return 0
 from django.db import transaction
 
+# Comentarios forum
+from xmodule.modulestore.django import modulestore, ModuleI18nService
+from xmodule.modulestore.exceptions import ItemNotFoundError
+from opaque_keys.edx.keys import UsageKey, CourseKey
+
 import threading
-
-
 lock = threading.Lock()
 
 def cadastraVersao(user,URL,urlExp ):
@@ -598,4 +601,37 @@ def urlsExcluir(user):
         return listURLandExps
 
 
-# Pega todos os experimentos
+def ExcluirDiscussion(user, locationCourse):
+    """
+    :param user:
+    :param locationCourse: location Course
+    :return comentarioRemove: retorna uma lista dos IDS dos usuarios que devem ser removidos
+    """
+
+    # Pega todos os experimentos deste curso
+    exps = ExperimentDefinition.objects.filter(course=locationCourse)
+
+    # todas as versoes
+    idsRemove = []
+    commentsAnonymous = []
+
+    for exp in exps:
+        opcs = OpcoesExperiment.objects.filter(experimento=exp)
+        for opc in opcs:
+            # Verifica se o usuário selecionou esta versao
+            try:
+                choice = UserChoiceExperiment.objects.get(versionExp=opc, userStudent=user)
+            except:
+                # Adiciona todas as versoes que o usuario nao adicionou
+                choices = UserChoiceExperiment.objects.filter(versionExp=opc)
+                for choice in choices:
+                    idsRemove.append(""+str(choice.userStudent.id))
+
+                    # Para este usuario adiciona-se os ids anonymos
+                    commentAns = AnonyMousPost.objects.filter(user=choice.userStudent.id)
+                    for commentAn in commentAns:
+                        commentsAnonymous.append(commentAn.commentid)
+
+
+    return idsRemove, commentsAnonymous
+

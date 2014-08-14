@@ -23,6 +23,13 @@ import lms.lib.comment_client as cc
 
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
 
+from experiments.utils import ExcluirDiscussion
+#from xmodule.modulestore.django import modulestore
+#from contentstore.utils import get_modulestore, get_lms_link_for_item
+
+
+
+
 THREADS_PER_PAGE = 20
 INLINE_THREADS_PER_PAGE = 20
 PAGES_NEARBY_DELTA = 2
@@ -36,6 +43,7 @@ def get_threads(request, course_id, discussion_id=None, per_page=THREADS_PER_PAG
     This may raise an appropriate subclass of cc.utils.CommentClientError
     if something goes wrong.
     """
+
     default_query_params = {
         'page': 1,
         'per_page': per_page,
@@ -105,6 +113,36 @@ def get_threads(request, course_id, discussion_id=None, per_page=THREADS_PER_PAG
     query_params['num_pages'] = num_pages
     query_params['corrected_text'] = corrected_text
 
+
+    # For A/B testing
+
+    # Is Staff?
+    user = User.objects.get(pk=request.user.id)
+
+    # Desta forma o o staff podera ver todas as conversas do forum
+
+    if user.is_staff == False:
+        course = get_course_with_access(request.user, 'load_forum', course_id)
+
+        # Ideias: pegar todas as questoes que o nao participa
+        excs, commentsAnonymous = ExcluirDiscussion(request.user, course.location)
+
+        i = 0
+        # Peguei o ID, pois um usuario nunca deve ter acesso a uma discussao que esta ocorrendo em outro arm
+        while i < len(threads):
+            # Algo que for postado como anonimo sera visivel a todos
+            # Para contornar e melhor adicionar uma tabela com todos os IDs anonimos e seus respectivos usuarios
+            if threads[i]['anonymous']:
+                print "Este thread e anonimo"
+                if threads[i]['id'] in commentsAnonymous:
+                    del threads[i]
+                else:
+                    i += 1
+            elif threads[i]['user_id'] in excs:
+                del threads[i]
+            else:
+                i += 1
+
     return threads, query_params
 
 
@@ -170,6 +208,7 @@ def forum_form_discussion(request, course_id):
     """
     Renders the main Discussion page, potentially filtered by a search query
     """
+
     course_id = SlashSeparatedCourseKey.from_deprecated_string(course_id)
     nr_transaction = newrelic.agent.current_transaction()
 
@@ -183,6 +222,7 @@ def forum_form_discussion(request, course_id):
     except cc.utils.CommentClientMaintenanceError:
         log.warning("Forum is in maintenance mode")
         return render_to_response('discussion/maintenance.html', {})
+
 
     user = cc.User.from_django_user(request.user)
     user_info = user.to_dict()
@@ -232,6 +272,13 @@ def forum_form_discussion(request, course_id):
         return render_to_response('discussion/index.html', context)
 
 
+
+
+
+
+
+
+
 @require_GET
 @login_required
 def single_thread(request, course_id, discussion_id, thread_id):
@@ -245,6 +292,7 @@ def single_thread(request, course_id, discussion_id, thread_id):
     # Currently, the front end always loads responses via AJAX, even for this
     # page; it would be a nice optimization to avoid that extra round trip to
     # the comments service.
+    print "Argumentos: ", course_id,"discussion_id", discussion_id, 'thread_id', thread_id
     try:
         thread = cc.Thread.find(thread_id).retrieve(
             recursive=request.is_ajax(),

@@ -21,11 +21,15 @@ class VerticalModule(VerticalFields, XModule, StudioEditableModule):
     def student_view(self, context):
         fragment = Fragment()
         contents = []
-
         child_context = {} if not context else copy(context)
         child_context['child_of_vertical'] = True
 
         for child in self.get_display_items():
+            print
+            print
+            print "Type(child): ", type(child)
+            print
+            print
             rendered_child = child.render(STUDENT_VIEW, child_context)
             fragment.add_frag_resources(rendered_child)
 

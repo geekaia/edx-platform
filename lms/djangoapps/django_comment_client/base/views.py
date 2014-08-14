@@ -33,6 +33,8 @@ import lms.lib.comment_client as cc
 
 log = logging.getLogger(__name__)
 
+from experiments.models import AnonyMousPost
+
 
 def permitted(fn):
     @functools.wraps(fn)
@@ -134,6 +136,16 @@ def create_thread(request, course_id, commentable_id):
         user.follow(thread)
     data = thread.to_dict()
     add_courseware_context([data], course)
+
+    # Agora irei pegar o id caso seja anonymous
+
+    if data['anonymous']:
+        print "Data: ", data
+        an = AnonyMousPost()
+        an.commentid = data['id']
+        an.user = request.user.id
+        an.save()
+
     if request.is_ajax():
         return ajax_content_response(request, course_id, data)
     else:

@@ -145,22 +145,30 @@ def render_accordion(request, course, chapter, section, field_data_cache):
 
     print "Estou no Render Acordion"
 
-    cont=0
 
-    for chapter in toc:
-        mythread = CadVersao(chapter['url_name'], request.user)
+    i =0
+
+    while i < len(toc):
+        mythread = CadVersao(toc[i]['url_name'], request.user)
         mythread.start()
         mythread.join()
         imprimir = mythread.getResult()
 
         if imprimir == False:
-            del toc[cont]
+            del toc[i]
+        else:
+            i+=1
 
-        cont = cont+1
-
-
-
-
+    # for chapter in toc:
+    #     mythread = CadVersao(chapter['url_name'], request.user)
+    #     mythread.start()
+    #     mythread.join()
+    #     imprimir = mythread.getResult()
+    #
+    #     if imprimir == False:
+    #         del toc[cont]
+    #
+    #     cont = cont+1
 
 
 
@@ -330,8 +338,6 @@ def index(request, course_id, chapter=None, section=None,
     registered = registered_for_course(course, user)
 
 
-
-
     if not registered:
         # TODO (vshnayder): do course instructors need to be registered to see course?
         log.debug(u'User %s tried to view course %s but is not enrolled', user, course.location.to_deprecated_string())
@@ -355,16 +361,11 @@ def index(request, course_id, chapter=None, section=None,
         # # Intrucoes para os testes AB
         toc = toc_for_course(user, request, course, chapter, section, field_data_cache)
 
-        # Passa somente o que e para passar
-
-        print "EU ENTREI AQUI NO INDEX"
-
-
+        # Se nao tiver uma versao entao a cadastra
         for chp in toc:
             mythread = CadVersao(chp['url_name'], request.user)
             mythread.start()
             mythread.join()
-
 
 
         context = {

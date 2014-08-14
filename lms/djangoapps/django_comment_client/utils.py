@@ -58,6 +58,7 @@ def has_forum_access(uname, course_id, rolename):
 def _get_discussion_modules(course):
     all_modules = modulestore().get_items(course.id, category='discussion')
 
+
     def has_required_keys(module):
         for key in ('discussion_id', 'discussion_category', 'discussion_target'):
             if getattr(module, key) is None:
@@ -136,6 +137,10 @@ def get_discussion_category_map(course):
     modules = _get_discussion_modules(course)
 
     for module in modules:
+        print
+        print "Module: ", module
+        print
+
         id = module.discussion_id
         title = module.discussion_target
         sort_key = module.sort_key

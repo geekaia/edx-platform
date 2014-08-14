@@ -4,6 +4,10 @@ from django.contrib.auth.models import User
 
 
 class StrategyRandomization(models.Model):
+    """
+    Esta entidade armazena as definções do experimento. O que possibilita mudar do algoritmo (Operador do PlanOut) e também definir um Design
+    do experimento personalizado.
+    """
     # Strategy: Uniform, WeightedChoice, BernoulliTrial, RandomInteger, Block Randomization
     strategyType = models.CharField(max_length=50)
     # Caso a estrategia seja Weight
@@ -29,6 +33,12 @@ class StrategyRandomization(models.Model):
 
 
 class ExperimentDefinition(models.Model):
+    """ Esta entidade habilita contém as definições de quais os experimentos. Para cada é possível ter uma linha desta tabela.
+
+        strategy: é relacionada a tabela StrategyRandomization que possibilita definir a forma de randomização, um Script em PlanOut ou mesmo
+        simplesmente alternar entre os operadores do PlanOut UniformChoice e WeightedChoice
+
+    """
     descricao = models.CharField(max_length=255, default='meuprimeiroexperimento') # descricao do ExperimentoDeverei gerar um número ou data para a descrição
     course = models.CharField(max_length=500)
     status = models.CharField(max_length=9) # started finished paused
@@ -39,7 +49,9 @@ class ExperimentDefinition(models.Model):
 
 
 class OpcoesExperiment(models.Model):
-
+    """
+    Nesta entidade grava-se as opções do experimento. Em um teste A/B são inseridas duas versões do experimento.
+    """
     experimento = models.ForeignKey(ExperimentDefinition)
     sectionExp = models.CharField(max_length=500)
     sectionExp_url = models.CharField(max_length=1000)
@@ -47,6 +59,10 @@ class OpcoesExperiment(models.Model):
 
 
 class UserChoiceExperiment(models.Model):
+    """
+        Esta entidade serve para armazenar as versões definidas na randomização do aluno.
+        Desta forma, o aluno sempre terá a versão que foi inicialmente definida na randomização.
+    """
     userStudent = models.ForeignKey(User)
     versionExp = models.ForeignKey(OpcoesExperiment)
     bloco = models.IntegerField(blank=True)
@@ -57,3 +73,8 @@ class HistoricoQuestoes(models.Model):
     campo = models.CharField(max_length=600)
     valor = models.CharField(max_length=600)
     usuario = models.ForeignKey(User)
+
+
+class AnonyMousPost(models.Model):
+    user = models.IntegerField()
+    commentid = models.CharField(max_length=600)
