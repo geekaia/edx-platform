@@ -1,0 +1,311 @@
+#IDEIAS	
+Ideias para a instalação
+Pegar o /edx/app de toda a instalação do site do edX colocar em um novo servidor.
+
+
+# Passo 1 -- Atualização do servidor
+apt-get update
+apt-get dist-upgrade 
+
+# Dependências iniciais
+sudo apt-get install -y build-essential software-properties-common python-software-properties curl git-core libxml2-dev libxslt1-dev python-pip python-apt python-dev
+sudo pip install --upgrade pip
+sudo pip install --upgrade virtualenv
+
+# Configurações do edX 
+cd /var/tmp
+######git clone -b release https://github.com/edx/configuration
+git clone -b edx-west/release_pre_injera https://github.com/edx/configuration
+
+# instala as dependências com o pip
+cd /var/tmp/configuration
+sudo pip install -r requirements.txt
+
+
+# Mudar permitir que o acesso remoto via ssh 
+vim playbooks/roles/common/defaults/main.yml
+
+Procure a variável COMMON_SSH_PASSWORD_AUTH e mude para o valor yes
+
+vim playbooks/edx_sandbox.yml
+
+Substitua o release do edX-platform release-2014-06-17
+
+#Instale o mysql e Coloque a sua senha 
+apt-get install mysql-server
+
+
+# Se ja tiver o mysql instalado tem que criar o arquivo  /root/.my.cnf
+Crie o arquivo: 
+vim /root/.my.cnf 
+i
+[client]
+user=root
+password=300686
+
+
+
+# Execução da instalação # release-2014-06-17  -- versao anterior ao 
+cd /var/tmp/configuration/playbooks && sudo ansible-playbook -c local ./edx_sandbox.yml -i "localhost,"
+
+
+
+
+
+# Par habilitar conexões ssh 
+vim /etc/ssh/sshd_config
+
+
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| edxapp             |
+| mysql              |
+| ora                |
+| performance_schema |
+| test               |
+| xqueue             |
++--------------------+
+7 rows in set (0.01 sec)
+
+mysql> drop database edxapp;
+Query OK, 124 rows affected (0.26 sec)
+
+mysql> create database edxapp;
+Query OK, 1 row affected (0.00 sec)
+
+mysql> exit 
+
+
+cd /edx/app/edxapp/ 
+rm -rf edx-platform
+
+vim /edx/app/edx_ansible/server-vars.yml 
+i
+edx_platform_repo: "https://github.com/geekaia/edx-platform.git" 
+
+
+#git clone https://github.com/geekaia/edx-platform
+#cd edx-platform
+#chown -Rf edxapp.edxapp .
+
+vim edx_sandbox.yml
+Mude hotfix-2014-06-18 para master
+cd /var/tmp/configuration/playbooks && sudo ansible-playbook -c local ./edx_sandbox.yml -i "localhost,"
+
+cd /edx/app/edxapp/edx-platform
+sudo -u www-data /edx/bin/python.edxapp ./manage.py lms syncdb --migrate --settings aws
+
+
+cd /edx/app/edxapp
+#sudo /edx/bin/update edx-platform master
+
+
+# Caso ainda não funcione o LMS ou CMS teremos que compilar os assets
+
+sudo -H -u edxapp bash
+source /edx/app/edxapp/edxapp_env
+cd /edx/app/edxapp/edx-platform
+paver update_assets cms --settings=aws
+paver update_assets lms --settings=aws
+
+pip install planout
+
+exit
+reboot 
+
+
+# Se quiser startar o LMS em linha de comando para ver os logs  e excessões que podem estar acontecendo
+# Primeiramente temos que para o serviço do LMS
+
+
+
+
+
+# Caso tenha esquecido a senha, será necessário mudar a senha existente 
+/etc/init.d/mysql stop 
+mysqld_safe --skip-grant-tables & 
+
+mysql -u root
+use mysql;
+update user set password=PASSWORD("NEW-ROOT-PASSWORD") where User='root';
+flush privileges; 
+quit 
+
+vim /root/.my.cnf 
+
+[client]
+user=root
+password=SUASENHA
+
+/etc/init.d/mysql stop 
+/etc/init.d/mysql start
+
+# Pega as últimas atualizações
+apt-get update 
+apt-get dist-upgrade 
+
+# instala o add-apt-repository
+apt-get install python-software-properties
+
+# Instale o java 7
+sudo add-apt-repository ppa:webupd8team/java
+sudo apt-get update
+sudo apt-get install oracle-jdk7-installer
+apt-get install   libjline-java
+apt-get install   libjlibeps-java
+
+#Tem que instalar o jdk 8 da oracle 
+apt-cache search oracle
+
+apt-get install  oracle-java8-set-default
+
+# http://www.oracle.com/technetwork/pt/java/javase/downloads/jdk7-downloads-1880260.html
+
+
+
+sudo apt-get install -y build-essential software-properties-common python-software-properties curl git-core libxml2-dev libxslt1-dev python-pip python-apt python-dev
+sudo pip install --upgrade pip
+sudo pip install --upgrade virtualenv
+
+cd /var/tmp
+#git clone -b release https://github.com/edx/configuration
+
+git clone -b edx-west/release_pre_injera https://github.com/edx/configuration
+
+vim configuration/playbooks/roles/common/defaults/main.yml # mudar  COMMON_SSH_PASSWORD_AUTH para "Yes" 
+
+cd /var/tmp/configuration
+sudo pip install -r requirements.txt
+
+vim  /etc/hosts
+deve ter as duas linhas abaixo 
+127.0.0.1 localhost
+127.0.0.1 EDX
+
+# para configurar o rabbiqm  tem que comentar outras linhas e deixar somente duas linhas 
+127.0.0.1 localhost e do EDX
+
+
+
+cd /var/tmp/configuration/playbooks && sudo ansible-playbook -c local ./edx_sandbox.yml -i "localhost," 
+
+
+# Instala o Planout 
+sudo su edxapp 
+/edx/app/edxapp/venvs/edxapp
+cd bin
+source activate 
+pip install planout 
+exit 
+
+sudo su 
+pip install planout 
+
+
+
+# PORTAS
+#    LMS - 80
+#    Studio - 18010
+
+
+# Ver o status dos serviços 
+sudo /edx/bin/supervisorctl -c /edx/etc/supervisord.conf status
+
+# VER INFOS HOW TO MANAGING THE PRODUCTION STACK
+#https://github.com/edx/configuration/wiki/edX-Managing-the-Production-Stack
+
+
+
+# Execute o script 
+#wget https://raw.github.com/edx/configuration/master/util/install/vagrant.sh -O - | bash
+
+# Agora tem que efetuar o download dos arquivos do repositório https://github.com/geekaia/edx-platform.git 
+
+
+# Caso o update edx-platform master não funcione será necessário
+
+sudo -u edxapp bash
+source /edx/app/edxapp/edxapp_env
+mkdir /tmp/root
+HOME=/tmp/root/
+
+cd /edx/app/edxapp/edx-platform
+SERVICE_VARIANT=lms rake lms:gather_assets:aws
+SERVICE_VARIANT=cms rake cms:gather_assets:aws
+
+
+Veja o status das aplicações 
+
+
+sudo /edx/bin/supervisorctl -c /edx/etc/supervisord.conf status 
+
+inicie novamente os serviços 
+sudo service nginx stop
+sudo service supervisor stop
+sudo service supervisor.devpi stop
+sudo pkill -u www-data
+sudo service nginx start
+sudo service supervisor start
+sudo service supervisor.devpi start
+
+
+
+
+
+# Dados que devem ser inseridos nas tabelas do mysql 
+
+INSERT INTO `auth_user` VALUES (2,'honor','','','honor@example.com','pbkdf2_sha256$10000$ZDKIRZI1VQ9b$AVmcBKM7u0HvozvHvNHBwhzfS2h9WNh41T6ukloM4Kc=',0,1,0,'2014-05-06 22:15:35','2014-02-10 03:20:18'),(3,'audit','','','audit@example.com','pbkdf2_sha256$10000$75fsOPcvLHE9$xHDbvtEj0CW3yGI/BFVDMFG3dgqSjg2ezPFkq7L0f8E=',0,1,0,'2014-05-06 22:23:12','2014-02-10 03:20:20'),(4,'verified','','','verified@example.com','pbkdf2_sha256$10000$JeWxVvd9Krz8$ba/hxk85pJfp+uKU39Hc7xWW5oVoPEW/unbMZKa+UrY=',0,1,0,'2014-04-28 02:32:38','2014-02-10 03:20:22'),(5,'staff','','','staff@example.com','pbkdf2_sha256$10000$JVxJtyfwoPJM$KyyczbIpgkVxquDkd/ZetfRE4XumZ3helKms58Zi9KA=',1,1,1,'2014-05-09 18:29:50','2014-02-10 03:20:23'),(6,'user1','','','user1@example.com','pbkdf2_sha256$10000$bpgBebqiKzgB$+ypXQLfgj4waU5DweeEALflyxuS08Btr7KN5pwCBWYo=',0,1,0,'2014-05-06 22:08:01','2014-04-25 15:05:50'),(7,'user2','','','user2@example.com','pbkdf2_sha256$10000$OQtJZl65Ojkd$0nfdgLX71TU01QeeDqW53f08Z1LoyBUpFnG80LKsdo4=',0,1,0,'2014-05-05 15:58:35','2014-04-25 15:06:58'),(9,'geekai','','','geekaia@gmail.com','pbkdf2_sha256$10000$Nf3eo1UfHnWk$j8WSjKs9Bu3TJjRYdJhUOfEkA7DQlDDyIuVHM41/Zmc=',0,1,0,'2014-05-06 22:29:31','2014-04-25 23:41:52');
+
+INSERT INTO `auth_userprofile` VALUES (2,1,'honor','','','','course.xml',NULL,NULL,NULL,NULL,NULL,1,'',NULL),(3,2,'audit','','','','course.xml',NULL,NULL,NULL,NULL,NULL,1,'',NULL),(4,3,'verified','','','','course.xml',NULL,NULL,NULL,NULL,NULL,1,'',NULL),(5,4,'staff','','','','course.xml',NULL,NULL,NULL,NULL,NULL,1,'',NULL),(6,5,'user1 asdf','','','','course.xml','m','',2008,'m','',1,'',NULL),(7,6,'user 2','','','','course.xml','m','',1999,'m','',1,'',NULL),(8,7,'Jacinto José Franco','','','','course.xml','m','',1986,'m','',1,'',NULL);
+
+
+
+# Para ver os bugs 
+tail -f /edx/var/log/{lms,cms,nginx}/*log
+
+
+playbooks/roles/edxapp/defaults/main.yml
+mudar a linha edx_platform_repo: "https://{{ COMMON_GIT_MIRROR }}/edx/edx-platform.git" 
+para edx_platform_repo: "https://{{ COMMON_GIT_MIRROR }}/geekaia/edx-platform.git"
+
+
+
+
+Para resolver o problema do preview
+
+sudo -u edxapp bash
+source /edx/app/edxapp/edxapp_env
+mkdir /tmp/root
+HOME=/tmp/root/
+
+vim /edx/app/edxapp/cms.env.json
+
+Configure as variáveis 
+
+PREVIEW_LMS_BASE
+CMS_BASE
+LMS_BASE
+
+com o valor 
+
+143.107.176.185
+
+
+in cms.env.json and lms.env.json, then restarting using 
+sudo /edx/bin/supervisorctl restart all
+
+
+
+
+
+Para resolver o problema do MONGODB em caso de desligamento acidental ou não
+sudo su 
+cd /edx/var/mongo/mongodb 
+sudo chown -R mongodb:mongodb  .  
+rm mongod.lock
+sudo service mongodb restart
+
+

@@ -1,0 +1,22 @@
+Tarefas primárias
+   -- Pegar informações de acordo com o design do experimento especificado, o que facilitaria na hora de importar para um software igual ao Minitab, JMP ou R - OK
+   -- Retirar Blocking Design e qualquer referência, pois por enquanto os designs serão carregados via campo CustomDesign -- OK
+   -- Adicionar um pouco de CSS no código do Strategy Randomization -- OK
+   -- Falar para o Ricardo criar um algumas questões e efetuar toda a parte com o edX Ora - Próxima reunião
+   -- Instalar o edX forum e ver se há a necessidade de adicionar um pouco de código -- OK - o aluno de um arm não verá as discussões de outros alunos, somente o staff tem acesso a todas as conversas.
+   -- Documentar o que já foi feito - PARCIAL
+   -- Permitir que seja adicionado mais uma opção nos testes A/B - TODO
+   -- Mudar o ícone para criar um experimento -- OK
+   -- Documentar todo o processo de instalação - PARCIAL
+   -- Color um ícone que permita adicionar mais uma opção para o experimento.
+   -- Pegar dados estatísticos dos alunos matriculados no Curso - OK
+   -- verificar se é necessário de mais alguma configuração adicional no smtp do servidor e mais algumas configurações do edX LMS que para os links do edX Studio. - PARCIAL
+   -- Quando um dado usuário fazer uma requisição de uma URL em que não tem  permissão para estar redirecionar para o COURSEWARE - TODOa
+
+Tarefas secundárias
+   -- Melhorar os campos do Histórico, o que possibilitará avaliar o comportamento dos usuários na rede.
+       -- Requisição feita para pegar o histórico: 
+       -- http://localhost:8000/courses/USPx/CS0000/2014_1/submission_history/staff/i4x://USPx/CS0000/problem/22b85e101edb4116b34a7c51af775d23
+   -- Estudar uma forma de criar backups automáticos  -- Via crontab 
+   -- Extrair informações de módulos que não tem nenhum experimento ??
+   -- Verificar se dá para plotar gráficos e já fazer a análise do desempenho dos alunos online e não offlines

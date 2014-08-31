@@ -1,0 +1,112 @@
+Recomendações 
+
+Ubuntu 12.04 amd64 (oraclejdk required)
+Minimum 2GB of memory, 4GB recommended for production servers (with only 2GB some swap space is required, at least during installation)
+At least one 2.00GHz CPU or EC2 compute unit
+Minimum 25GB of free disk, 50GB recommended for production servers
+
+# Requerimentos 7 GB de memória, 
+
+
+
+
+sudo apt-get install -y build-essential software-properties-common python-software-properties curl git-core libxml2-dev libxslt1-dev python-pip python-apt python-dev
+sudo pip install --upgrade pip
+sudo pip install --upgrade virtualenv
+
+cd /var/tmp
+
+
+#git clone -b  release-johnnycake https://github.com/edx/configuration
+#cd configuration
+
+# Faça o download da pasta de configuração
+wget https://dl.dropboxusercontent.com/u/15690847/configuracao.tar
+tar -xf configuracao.tar
+
+
+# Instalando os requirements 
+cd configuration
+sudo pip install -r requirements.txt
+
+vim edx_sandbox.yml
+#Substitua master por release-2014-07-16
+
+
+
+mkdir -p /edx/app/edxapp 
+cd /edx/app/edxapp 
+chown -Rf edxapp.www-data . 
+git clone https://github.com/geekaia/edx-platform
+chmod 777 -Rf edx-platform
+chmod 777 -Rf .
+chmod 777 -Rf /edx/app
+chmod 777 -Rf /edx
+
+
+cd /var/tmp/configuration/playbooks && sudo ansible-playbook -c local ./edx_sandbox.yml -i "localhost,"
+
+
+
+
+
+# Mudando o dono da pasta
+cd /edx/app/edxapp 
+chown -Rf edxapp.edxapp edx-platform
+
+# Instalando as dependências
+sudo -H -u edxapp bash
+source /edx/app/edxapp/edxapp_env
+pip install planout
+
+
+
+# Restartando os serviços  CMS e LMS
+sudo /edx/bin/supervisorctl -c /edx/etc/supervisord.conf restart edxapp: 
+
+
+##########################################
+##### Iniciando o LMS em modo debug ######
+##########################################
+
+# Parando os serviços 
+sudo /edx/bin/supervisorctl -c /edx/etc/supervisord.conf stop edxapp: 
+
+# Atualiza 
+sudo -H -u edxapp bash
+source /edx/app/edxapp/edxapp_env
+cd /edx/app/edxapp/edx-platform
+git pull # Caso nao funcione verifique com: cat .git/config
+
+
+# Os serviços devem ser iniciados em terminais diferentes
+#LMS
+sudo -H -u edxapp bash
+source /edx/app/edxapp/edxapp_env
+cd /edx/app/edxapp/edx-platform
+paver devstack lms
+
+
+# Studio 
+sudo -H -u edxapp bash
+source /edx/app/edxapp/edxapp_env
+cd /edx/app/edxapp/edx-platform
+paver devstack studio
+
+
+sudo /edx/bin/supervisorctl -c /edx/etc/supervisord.conf stop edxapp: 
+/etc/init.d/nginx  stop
+
+source  /edx/app/edxapp/venvs/edxapp/bin/activate
+/edx/app/edxapp/venvs/edxapp/bin/python manage.py lms runserver --settings=devstack 0.0.0.0:80
+
+source  /edx/app/edxapp/venvs/edxapp/bin/activate
+/edx/app/edxapp/venvs/edxapp/bin/python manage.py cms runserver --settings=devstack 0.0.0.0:18010
+
+
+#Acessar shell 
+sudo -H -u edxapp bash
+source /edx/app/edxapp/edxapp_env
+cd /edx/app/edxapp/edx-platform
+./manage.py lms shell --settings=devstack
+

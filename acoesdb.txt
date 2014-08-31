@@ -1,0 +1,27 @@
+
+Shell 
+
+sudo su  
+cd /edx/app/edxapp/edx-platform
+sudo -u www-data /edx/bin/python.edxapp ./manage.py cms --settings devstack shell
+
+
+# Limpa todos os dados do MODELO Entidade relacionamento 
+
+from experiments.models import * 
+
+UserChoiceExperiment.objects.all().delete()
+
+OpcoesExperiment.objects.all().delete()
+
+ExperimentDefinition.objects.all().delete()
+
+# Remove todas as opções do usuário honor
+for i in UserChoiceExperiment.objects.all(): 
+    print i.userStudent, i.versionExp.version
+    if i.userStudent.username=='honor': 
+        i.delete()
+
+
+
+

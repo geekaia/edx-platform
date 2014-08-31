@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="${settings.STATIC_URL}/js/planout.js"></script>
+    <script src="http://yandex.st/highlightjs/8.0/highlight.min.js"></script>
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+
+
+</head>
+<body>
+<div id="mydiv"  style="padding: 20px;">
+    <table>
+        <tr>
+            <td width="300px">
+                Estrategia de randomizaçao
+            </td>
+
+            <td>
+                <select id="estrategy" onchange="updateMainDiv();" class="form-control">
+                  <option value="UniformChoice">Uniform</option>
+                  <option value="WeightedChoice">Proportion</option>
+                  <option value="planOut">planOut Script</option>
+                  <option value="customdesign">Customizada</option>
+                </select>
+            </td>
+        </tr>
+    </table>
+
+</div>
+
+<div id="uniform" hidden="true" style="padding: 20px;">
+    <br />
+    <br />
+    <form id="UfChoice" method="POST">
+        <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}"  />
+        <input type="hidden" id="strategySelUfChoice" name='strategySel' value="UniformChoice" />
+        <br />
+        <font color="blue">${mensagemUniformChoice}</font>
+
+        <br />
+        ${mensagem}
+        <br />
+        <input type="submit" class="btn btn-primary" value="Salvar" />
+    </form>
+</div>
+
+<div id="WChoice"  hidden="true" style="width: 400px; padding: 20px;">
+    <br />
+    <br />
+    <form id="WChoice" method="POST">
+        <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}" />
+        <input type="hidden" id="strategySelWChoice" name='strategySel' value="WeightedChoice" />
+        Obs: entre  0.8 para 80%  e 0.2 para 20%. A soma dos dois tem que dar 1.
+        <br />
+        ${pesos}
+        <br />
+        <font color="blue">${mensagemWeightedChoice}</font>
+
+        <br />
+        <br />
+        ${mensagem}
+
+        <br>
+        <input type="submit" class="btn btn-primary" value="Salvar" />
+    </form>
+</div>
+
+<div id="customizada" style="padding: 20px;">
+  <table border='0'>
+    <tr>
+        <td>Com este design é possível colar um Desin de experimento customizado gerado pelo Minitab, JMP ou R. A única regra é que na primeira linha deve constar o <b>título</b> do campo e as colunas devem ser separadas por vírgula.
+  <br /> </td>
+    </tr>
+      <tr>
+        <td>Obs.: A primeira é a da versão (0 para A e 1 para B). Será considerado a randomização Uniform em caso de excessões.</td>
+      </tr>
+  </table>
+
+
+  <br />
+
+  <form id="customForm" method="POST">
+      Design do experimento
+      <br />
+      <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}" />
+      <input type="hidden" id="strategyEstratification" name='strategySel' value="customdesign" />
+      <textarea id="customDesign" name="customDesign" rows="5" class="form-control"  cols="30">${strat.customDesign}</textarea>
+      <br />
+      <input type="submit" id="salvar" class="btn btn-primary" value="Salvar" />
+  </form>
+</div>
+
+
+<div id="planoutScript"  style="padding: 20px;">
+
+<table border="1">
+    <tr>
+        <td>Variáveis de entrada</td>
+        <td>Variável de Saída</td>
+    </tr>
+    <tr>
+        <td> Obrigatórias: CHOICES e userid<br />
+            Opcionais: PAIS, CIDADE, IDADE, SEXO e INSTRUCAO.
+            <br />
+            <a href="#" onClick="window.open('${settings.STATIC_URL}/txt/codigos.txt','codigos','width=750,height=500,location=no')" class="button action-primary action">Lista de Códigos SEXO, INSTRUCAO, PAIS</a>
+        </td>
+        <td>Obrigatória: URL</td>
+    </tr>
+</table>
+<br />
+<b>Observação: </b> Caso ocorra uma excessão na randomização criada via Script do PlanOut será considerada a randomização Uniform  do
+PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha uma versão do experimento.
+
+<br />
+
+        <form method="POST">
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}" />
+            <input type="hidden" id="strategyEstratification" name='strategySel' value="planOut" />
+
+            <table border="0">
+                <tr>
+                    <td>
+                        Script em PlanOut <br /><textarea id="input" name="input" rows="10" class="form-control"  cols="60">${strat.planoutScript}</textarea> </td>
+
+                    <td style="padding: 10px;"> <input type="button" value="Compilar>>>" onclick="parse();" class="btn btn-default" /></td>
+                    <td>
+                        Resultado em Json <br /> <textarea id="output" name="output" class="form-control" readonly rows="10" cols="60">${strat.planoutJson}</textarea> </td>
+                </tr>
+            </table>
+            <br />
+            ${mensagemCustom}
+            <br />
+
+            <b>Dica: compile o código antes de salvar!</b>
+            <br />
+            <br />
+
+            <input type="submit" id="salvar" class="btn btn-primary" value="Salvar" />
+        </form>
+    <br />
+    <br />
+</div>
+
+
+
+
+<script language="javascript">
+
+    var input = document.getElementById('input');
+    var output = document.getElementById('output');
+    var json = "";
+
+    function parse() {
+        var script = '';
+        try {
+            json = '';
+            script=  input.value;
+          json = '';
+          json = planout.parse(script);
+          //output.innerHTML = hljs.highlight('json', JSON.stringify(json, undefined, 2)).value;
+          output.innerHTML = JSON.stringify(json);
+          $("#output").attr('readonly','readonly');
+
+        } catch (err) {
+          json = "";
+          output.innerHTML = '<span class="hljs-variable">' + err + '</span>';
+        }
+    }
+
+
+    function updateMainDiv()
+    {
+          var e = document.getElementById("estrategy");
+          var selecao = e.options[e.selectedIndex].value;
+
+          if (selecao =='UniformChoice') {
+
+              ediv = document.getElementById('uniform');
+              ediv.style.display = 'block';
+
+              ediv = document.getElementById('WChoice');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('planoutScript');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('customizada');
+              ediv.style.display = 'none';
+
+              document.getElementById('strategySelUfChoice').value = 'UniformChoice';
+              window.resizeTo(750,500);
+
+          }
+
+          if (selecao =='WeightedChoice') {
+              ediv = document.getElementById('uniform');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('WChoice');
+              ediv.style.display = 'block';
+
+              ediv = document.getElementById('planoutScript');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('customizada');
+              ediv.style.display = 'none';
+
+              window.resizeTo(750,500);
+          }
+
+
+        if (selecao =='planOut') {
+              ediv = document.getElementById('uniform');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('WChoice');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('customizada');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('planoutScript');
+              ediv.style.display = 'block';
+
+              // redimenciona a janela
+              //window.moveTo(0, 0);
+              //window.resizeTo(screen.availWidth, screen.availHeight);
+              window.resizeTo(750,700);
+        }
+
+        if (selecao =='customdesign') {
+              ediv = document.getElementById('uniform');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('WChoice');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('planoutScript');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('customizada');
+              ediv.style.display = 'block';
+
+              // redimenciona a janela
+              window.resizeTo(750,500);
+        }
+
+    }
+
+    // Atualiza o select
+    var e = document.getElementById("estrategy");
+    var strat = "${strat.strategyType}";
+
+
+
+    if (strat =='UniformChoice') {
+        e.selectedIndex = 0;
+    }
+
+    if (strat =='WeightedChoice') {
+        e.selectedIndex = 1;
+    }
+
+    if (strat =='planOut') {
+        e.selectedIndex = 2;
+    }
+
+    if (strat =='customdesign') {
+        e.selectedIndex = 3;
+    }
+
+    // Atualiza o DIV
+    updateMainDiv();
+
+
+
+</script>
+
+
+
+</body>
+</html>

@@ -1,0 +1,18 @@
+
+from  experiments.models import * 
+StrategyRandomization.objects.all().delete()
+ExperimentDefinition.objects.all().delete()
+OpcoesExperiment.objects.all().delete()
+UserChoiceExperiment.objects.all().delete()
+HistoricoQuestoes.objects.all().delete()
+ExperimentDefinition.objects.all().delete()
+
+Delete tables Mysql
+drop table  experiments_userchoiceexperiment;
+drop table experiments_opcoesexperiment;
+
+drop table experiments_historicoquestoes; 
+
+drop table experiments_experimentdefinition;
+
+
