@@ -274,6 +274,12 @@ def expAnalise(request, course_id,  idExp):
         UserBProfile=[]
         exercInfoB=[]
 
+        TotalUsersC = 0
+        ScoresPorQuestaoC=[]
+        UserCProfile=[]
+        exercInfoC=[]
+
+
 
         for usuario in usuariosParticipantes:
 
@@ -319,18 +325,22 @@ def expAnalise(request, course_id,  idExp):
                     # TotalUsersAUser = 0
                     ScoresPorquestaoAUser=[]
                     ScoresPorquestaoBUser=[]
+                    ScoresPorquestaoCUser=[]
 
                     # exercInfoAUser=[]
 
                     # UserAProfileUser=[]
                     exercInfoAUser=[]
                     exercInfoBUser=[]
+                    exercInfoCUser=[]
 
 
                     if usuario.versionExp.version == 'A':
                         TotalUsersA = TotalUsersA + 1
-                    else:
+                    elif usuario.versionExp.version == 'B':
                         TotalUsersB = TotalUsersB + 1
+                    else:
+                        TotalUsersC = TotalUsersC + 1
 
 
                     for section in chapter['sections']:
@@ -362,7 +372,7 @@ def expAnalise(request, course_id,  idExp):
                                 ScoresPorquestaoAUser.append(sectionExec)
 
 
-                        else:
+                        elif usuario.versionExp.version == 'B':
                             # TotalScoreB.append(earned)
                             # TotalScorePossibleB.append(total)
                             exercInfoBUser.append(exercInfo)
@@ -381,16 +391,42 @@ def expAnalise(request, course_id,  idExp):
 
                                 ScoresPorquestaoBUser.append(sectionExec)
 
+                        else:
+                            # TotalScoreB.append(earned)
+                            # TotalScorePossibleB.append(total)
+                            exercInfoCUser.append(exercInfo)
+
+                            if len(section['scores']) > 0:
+                                # Falta os Scores de cada exercício
+                                exercicio = 1
+                                sectionExec=[]
+                                for UserID in section['scores']:
+                                    SCORE = []
+                                    SCORE.append(exercicio) # numero do exercicio
+                                    SCORE.append(float(UserID.earned)) # o Quanto conseguiu
+                                    SCORE.append(UserID.possible) # Maximo possivel
+                                    exercicio+=1
+                                    sectionExec.append(SCORE)
+
+                                ScoresPorquestaoCUser.append(sectionExec)
+
+
+
+
                     if usuario.versionExp.version == 'A':
                         # print "Score User: ", ScoresPorquestaoAUser
                         ScoresPorquestaoA.append(ScoresPorquestaoAUser)
                         UserAProfile.append(usrprofl)
                         exercInfoA.append(exercInfoAUser)
                         # TotalScoreA.append(TotalScoreAUser)
-                    else:
+                    elif usuario.versionExp.version == 'B':
                         ScoresPorQuestaoB.append(ScoresPorquestaoBUser)
                         UserBProfile.append(usrprofl)
                         exercInfoB.append(exercInfoBUser)
+                    else:
+                        ScoresPorQuestaoC.append(ScoresPorquestaoCUser)
+                        UserCProfile.append(usrprofl)
+                        exercInfoC.append(exercInfoCUser)
 
 
 
@@ -409,6 +445,12 @@ def expAnalise(request, course_id,  idExp):
         except:
 
             questoesB = 0
+
+        try:
+            questoesC = len(ScoresPorQuestaoC)/TotalUsersC
+        except:
+
+            questoesC = 0
 
 
         # Gera um arquivo CSV a partir dos dados coletados do aluno
@@ -493,6 +535,53 @@ def expAnalise(request, course_id,  idExp):
             userResps = ScoresPorQuestaoB[UserID]
             tentValQuest = exercInfoB[UserID][0]
             profUser = UserBProfile[UserID]
+
+
+            # Faz a iteração pela quantidade de Sections
+            for sec in range(0, len(userResps)):
+                questoesSection = userResps[sec]
+                tentValQuestSection = tentValQuest[sec]
+
+                for quest in range(0, len(questoesSection)):
+
+
+                    HistResps = ''
+
+                    try:
+                        hsts = HistoricoQuestoes.objects.filter(campo=tentValQuestSection[quest][2],usuario=usuario.userStudent)
+
+                        for hst in hsts:
+                            print "Hist: ", toUTF8(hst.valor)
+
+                            HistResps += toUTF8(hst.valor) + ', '
+
+                    except:
+                        print "Erro ao pegar hist"
+
+                    writer.writerow(['B',
+                            int(sec)+1,
+                            int(quest)+1,
+                            toUTF8(profUser[8]),
+                            # questoesSection[quest][0],
+                            toUTF8(questoesSection[quest][1]),
+                            toUTF8(questoesSection[quest][2]),
+                            toUTF8(profUser[0]),
+                            toUTF8(profUser[1]),
+                            toUTF8(profUser[2]),
+                            toUTF8(profUser[3]),
+                            toUTF8(profUser[4]),
+                            toUTF8(profUser[5]),
+                            toUTF8(profUser[6]),
+                            toUTF8(profUser[7]),
+                            toUTF8(tentValQuestSection[quest][0]),
+                            toUTF8(tentValQuestSection[quest][1]),
+                            HistResps])
+
+        # Arm C
+        for UserID in range(0, TotalUsersC):
+            userResps = ScoresPorQuestaoC[UserID]
+            tentValQuest = exercInfoC[UserID][0]
+            profUser = UserCProfile[UserID]
 
 
             # Faz a iteração pela quantidade de Sections

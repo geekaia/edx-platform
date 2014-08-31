@@ -309,3 +309,11 @@ rm mongod.lock
 sudo service mongodb restart
 
 
+
+# Limpar dados dos experimentos 
+from experiments.models import * 
+UserChoiceExperiment.objects.all().delete()
+OpcoesExperiment.objects.all().delete()
+ExperimentDefinition.objects.all().delete()
+StrategyRandomization.objects.all().delete()
+
