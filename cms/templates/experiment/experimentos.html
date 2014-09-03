@@ -55,7 +55,7 @@
                                         <br />
                                         <a href="${lms_link.split('jump_to')[0]}DesignAsCSV/${exp.id}/" class="button action-primary action">${_("View Design Results as CSV")}</a>
                                         <br />
-                                        <a href="experiments/${exp.id}" class="button action-primary action">${_("Emails")}</a>
+                                        <a href="../experiments/${course_key_string}/${exp.id}" class="button action-primary action">${_("Emails")}</a>
                                         % if showdefine:
                                            <br />
                                            <a href="#" onClick="window.open('../definestrategy/${course_key_string}/${exp.id}','expdefinition','width=750,height=500,location=no')" class="button action-primary action">${_("Define Strategy")}</a>

@@ -29,6 +29,9 @@ lock = threading.Lock()
 
 
 class CadVersao(Thread):
+    """
+        Este thread assegura que todos só serão cadastrados um usuário por vez, o que permite avaliar
+    """
 
     def __init__(self, chapter, usuario):
         Thread.__init__(self)
@@ -38,29 +41,24 @@ class CadVersao(Thread):
     def run(self):
         chapter=self.chapter
         usuario=self.usuario
-
         lock.acquire() #acquire the lock
-
         self.vercad = VerABprint(chapter, usuario)
-
         lock.release()
 
     def getResult(self):
         return self.vercad
 
 
-
-
 def cadastraVersao(user,URL,urlExp ):
     """
     Esta função faz a randomização e em seguida faz o cadastro na entidade UserChoiceExperiment. A randomização ocorre de acordo com o uqe estiver
     definido na entidade StrategyRandomization no campo strategyType. Atualmente é possível alternar entre as randomizações:
-            UniformChoicc, WeightedChoice, PlanoutScript e CustomDesign (design do experimento criado pelo R, JMP, SAS ou Minitab)
+            UniformChoice, WeightedChoice, PlanoutScript e CustomDesign (design do experimento criado pelo R, JMP, SAS ou Minitab)
 
     :param user: aluno
     :param URL: url que o usuário está tentando acessar
     :param urlExp:
-    :return:
+    :return: file in CSV format
     """
 
     try:
@@ -87,15 +85,10 @@ def cadastraVersao(user,URL,urlExp ):
         for opc in opcs:
             options[opc.version] = opc
             CHOICES.append(opc.sectionExp_url)
-
             curso = opc.experimento.course
-
             quant = UserChoiceExperiment.objects.filter(versionExp=opc)
-
             lenV[opc.version] = len(quant)
-
             ExpPart = opc.experimento
-
             strat = opc.experimento.strategy # Pega a estratégia de randomização
 
             if lenV[opc.version] >= max:
@@ -198,7 +191,6 @@ def cadastraVersao(user,URL,urlExp ):
             except:
                 deuerro = True
                 print "Erro nesta randomização"
-
 
         try:
 
@@ -380,7 +372,9 @@ def VerABprint(URL, user):
 
 def pulaURL(URL, user):
     """
-    Esta função verifica se uma dada URL deve ser pulada.
+    Esta função verifica se uma dada URL deve ser pulada. Uma função que pode ser pulada faz parte do experimento, contudo não é a
+    atribuida ao usuário na randomização.
+
     :param URL: url do LMS
     :param user: usuario que fez a requisição
     :return: true -- esta URL não será considerada na hora de renderizar um componente
@@ -453,6 +447,9 @@ def urlsExcluir(user):
 
 def ExcluirDiscussion(user, locationCourse):
     """
+     Verifica quais IDs (dos usuários) devem ser excluidos do forum e mais os ID's anônimos que devem ser excluidos.
+     Como na listagem não tem como identificar uma simples postagem, foram adicionados uma entidade que conterá os ID's dos comentários.
+
     :param user:
     :param locationCourse: location Course
     :return comentarioRemove: retorna uma lista dos IDS dos usuarios que devem ser removidos

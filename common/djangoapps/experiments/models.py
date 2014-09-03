@@ -4,8 +4,8 @@ from django.contrib.auth.models import User
 
 
 """
-by: Jacinto José Franco
-Este aquivo contem todas as entidades necessarias para fazer com que os experimentos randomizados funcionem
+  by: Jacinto José Franco
+  Este aquivo contem todas as entidades necessarias para fazer com que os experimentos randomizados funcionem
 """
 
 class StrategyRandomization(models.Model):
@@ -44,8 +44,8 @@ class ExperimentDefinition(models.Model):
         simplesmente alternar entre os operadores do PlanOut UniformChoice e WeightedChoice
 
     """
-    descricao = models.CharField(max_length=255, default='meuprimeiroexperimento') # descricao do ExperimentoDeverei gerar um número ou data para a descrição
-    course = models.CharField(max_length=500)
+    descricao = models.CharField(max_length=60, default='meuprimeiroexperimento') # descricao do ExperimentoDeverei gerar um número ou data para a descrição
+    course = models.CharField(max_length=60)
     status = models.CharField(max_length=9) # started finished paused
     userTeacher = models.ForeignKey(User)
 
@@ -58,8 +58,8 @@ class OpcoesExperiment(models.Model):
     Nesta entidade grava-se as opções do experimento. Em um teste A/B são inseridas duas versões do experimento.
     """
     experimento = models.ForeignKey(ExperimentDefinition)
-    sectionExp = models.CharField(max_length=500)
-    sectionExp_url = models.CharField(max_length=500)
+    sectionExp = models.CharField(max_length=100)
+    sectionExp_url = models.CharField(max_length=50)
     version = models.CharField(max_length=1) # A ou B # Se Não tiver A, então Esta inserido a versão versão A
 
 
@@ -88,4 +88,4 @@ class AnonyMousPost(models.Model):
         Com esta tabela aramzena-se os o id e o usuario dos comentários anônimos. Desta forma fica mais fácil para recuperar.
     """
     user = models.IntegerField()
-    commentid = models.CharField(max_length=600)
+    commentid = models.CharField(max_length=50)

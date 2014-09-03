@@ -55,53 +55,81 @@ log = logging.getLogger(__name__)
 @require_GET
 @login_required
 def EmailsExp(request,  course_key_string, idExp=None):
+    """
+    Retorna a lista de e-mails por ARM, o que pode permitir que o professor envie e-mails para um grupo em específico.
 
-        # usage_key = CourseKey.from_string(course_key_string)
-        #
-        # # print "Course Location: ", courseKey
-        #
-        # if not has_course_access(request.user, usage_key):
-        #     raise PermissionDenied()
+    :param request: httprequest default
+    :param idExp: ID do experimento
+    :return: CSV file format
+    """
 
-        response = HttpResponse(content_type='text/csv; charset=utf-8')
-        response['Content-Disposition'] = 'attachment; filename="relatorio2.csv"'
-        writer = csv.writer(response)
 
-        try:
-            exp = ExperimentDefinition.objects.get(userTeacher=request.user, id=idExp)
-            expsUsrsInfos={}
+    # usage_key = CourseKey.from_string(course_key_string)
+    #
+    # # print "Course Location: ", courseKey
+    #
+    # if not has_course_access(request.user, usage_key):
+    #     raise PermissionDenied()
 
-            uschs = UserChoiceExperiment.objects.filter(experimento=exp)
+    usage_key = CourseKey.from_string(course_key_string)
 
-            print "Tamanho: ", len(uschs)
-            # print "exp: ", exp
+    if not has_course_access(request.user, usage_key):
+        raise PermissionDenied()
 
-            arms = {}
-            listA = []
-            listB = []
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = 'attachment; filename="relatorio2.csv"'
+    writer = csv.writer(response)
 
-            writer.writerow(['arm', 'usuario', 'e-mail'])
+    try:
+        exp = ExperimentDefinition.objects.get(userTeacher=request.user, id=idExp)
+        expsUsrsInfos={}
 
-            for usch in uschs:
-                if usch.versionExp.version == "A":
-                    listA.append(usch.userStudent)
-                else:
-                    listB.append(usch.userStudent)
-            for i in listA:
-                writer.writerow(['A', i.username, i.email])
+        uschs = UserChoiceExperiment.objects.filter(experimento=exp)
 
-            for i in listB:
-                writer.writerow(['B', i.username, i.email])
+        print "Tamanho: ", len(uschs)
+        # print "exp: ", exp
 
-            return response
+        listA = []
+        listB = []
+        listC = []
 
-        except:
-            print "Erro ao pegar o exp"
+        writer.writerow(['arm', 'usuario', 'e-mail'])
+
+        for usch in uschs:
+            if usch.versionExp.version == "A":
+                listA.append(usch.userStudent)
+            elif usch.versionExp.version == "B":
+                listB.append(usch.userStudent)
+            else:
+                listC.append(usch.userStudent)
+
+        for i in listA:
+            writer.writerow(['A', i.username, i.email])
+
+        for i in listB:
+            writer.writerow(['B', i.username, i.email])
+
+        for i in listC:
+            writer.writerow(['C', i.username, i.email])
+
+        return response
+
+    except:
+        print "Erro ao pegar o exp"
 
 
 @ensure_csrf_cookie
 @login_required
 def DefineStrategy(request,  course_key_string, idExperiment=None):
+
+    """
+    Permite alternar entre os operadores do PlanOut e permite especificar um design do experimento criado pelo JMP, R ou Minitab.
+
+    :param request:
+    :param course_key_string:
+    :param idExperiment: id do experimento
+    :return: renderiza a página que pemrite definir a estratégia
+    """
 
 
     mensagem = ""
@@ -207,21 +235,23 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
 @ensure_csrf_cookie
 @login_required
 def experiments_handler(request, course_key_string):
+    """
+    Mostra a listagem dos experimentos deste curso
+
+    :param request:
+    :param course_key_string:
+    :return:
+    """
+
     usage_key = CourseKey.from_string(course_key_string)
-
-    # print "Course Location: ", courseKey
-
     if not has_course_access(request.user, usage_key):
         raise PermissionDenied()
 
     course_module = modulestore().get_course(usage_key, depth=3)
 
-    print "Course location: ", course_module.location
-
-
     # Lista dos Experimentos
     expList = ExperimentDefinition.objects.filter(userTeacher=request.user, course=course_module.location)
-    lms_link = get_lms_link_for_item(course_module.location)
+    lms_link = get_lms_link_for_item(course_module.location) # link para o LMS
 
     return render_to_response('experiment/experimentos.html', {
             'lms_link': lms_link,
@@ -236,6 +266,14 @@ def experiments_handler(request, course_key_string):
 @require_http_methods(("GET", "PUT", "POST"))
 @expect_json
 def block_clone_handler(request, course_key_string):
+    """
+    Permite clonar o conteúdo de uma dada semana do experimento. Além de clonar nesta função faz a definição do experimento. o que insere entradas nas
+    tabelas
+
+    :param request:
+    :param course_key_string:
+    :return:
+    """
 
     if request.method in ('PUT', 'POST'):
         #  Get location Course com base no valor passado pelo Json
@@ -462,7 +500,6 @@ def block_clone_handler(request, course_key_string):
 
 
 def getURLSection(course_location, loc):
-
     curso = modulestore().get_item(course_location, depth=3)
     sections = curso.get_children()
 
@@ -473,41 +510,53 @@ def getURLSection(course_location, loc):
         if section.location == loc:
             print "Url Name1: ", section.url_name
             return section.url_name
-
-
-def getMetadata(parent_location, duplicate_source_location, parent_destination, display_name=None, user=None):
-    """
-    Duplicate an existing xblock as a child of the supplied parent_location.
-    """
-
-    # print "parent_location: ", parent_location
-    # print "duplicate_source_location: ", duplicate_source_location
-    # print "parent_destination: ", parent_destination
-    # print
-
-
-    print "Dp primeiro"
-    store = get_modulestore(duplicate_source_location)
-
-    print "Dp segundo -- store: ", store
-    source_item = store.get_item(duplicate_source_location)
-
-    print "Dp terceiro -- Source-item: ", source_item
-    # Change the blockID to be unique.
-    dest_location = parent_destination.replace(name=uuid4().hex)
-
-    print "Dp quarto -- Dest_location: ", dest_location
-    category = duplicate_source_location.category
-
-    print "Dp quinto -- Categoria: ", category
-
-    # Update the display name to indicate this is a duplicate (unless display name provided).
-    duplicate_metadata = own_metadata(source_item)
-
-    return duplicate_metadata, source_item.data if hasattr(source_item, 'data') else None, category
+#
+#
+# def getMetadata(parent_location, duplicate_source_location, parent_destination, display_name=None, user=None):
+#     """
+#     Duplicate an existing xblock as a child of the supplied parent_location.
+#     """
+#
+#     # print "parent_location: ", parent_location
+#     # print "duplicate_source_location: ", duplicate_source_location
+#     # print "parent_destination: ", parent_destination
+#     # print
+#
+#
+#     print "Dp primeiro"
+#     store = get_modulestore(duplicate_source_location)
+#
+#     print "Dp segundo -- store: ", store
+#     source_item = store.get_item(duplicate_source_location)
+#
+#     print "Dp terceiro -- Source-item: ", source_item
+#     # Change the blockID to be unique.
+#     dest_location = parent_destination.replace(name=uuid4().hex)
+#
+#     print "Dp quarto -- Dest_location: ", dest_location
+#     category = duplicate_source_location.category
+#
+#     print "Dp quinto -- Categoria: ", category
+#
+#     # Update the display name to indicate this is a duplicate (unless display name provided).
+#     duplicate_metadata = own_metadata(source_item)
+#
+#     return duplicate_metadata, source_item.data if hasattr(source_item, 'data') else None, category
 
 #
 def create_item(parent_location, category, display_name, request, dt_metadata=None, datacomp=None):
+
+    """
+    Cria um item no mongoDB de acordo com a categoria especificada.
+
+    :param parent_location:
+    :param category: categoria do experimento sequential, chapter e vertical
+    :param display_name:
+    :param request:
+    :param dt_metadata:
+    :param datacomp:
+    :return:
+    """
 
 
     """View for create items."""
@@ -518,7 +567,6 @@ def create_item(parent_location, category, display_name, request, dt_metadata=No
     dest_location = parent_location.replace(category=category, name=uuid4().hex)
     print "-- Quarto -- "
 
-
     if not has_course_access(request.user, parent_location):
         raise PermissionDenied()
     print "-- Quinto -- "
@@ -526,7 +574,6 @@ def create_item(parent_location, category, display_name, request, dt_metadata=No
 
     metadata = {}
     data = None
-
 
     if dt_metadata is not None:
         metadata = dt_metadata
@@ -619,5 +666,3 @@ def duplicate_item(parent_location, duplicate_source_location, display_name=None
         get_modulestore(parent_location).update_item(parent, user.id if user else None)
 
     return dest_location
-#
-#

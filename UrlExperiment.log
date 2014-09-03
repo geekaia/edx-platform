@@ -1,3 +1,5 @@
 {"inputs": {"userid": 1}, "name": "UrlExperiment", "checksum": "55762d28", "params": {"URL": "3d3151a5096e4e038cfda36f944b4acf"}, "time": 1409501150, "salt": "UrlExperiment", "event": "exposure"}
 {"inputs": {"userid": 19}, "name": "UrlExperiment", "checksum": "55762d28", "params": {"URL": "74410c090e4c4200962c14d25fc0164d"}, "time": 1409501178, "salt": "UrlExperiment", "event": "exposure"}
 {"inputs": {"userid": 16}, "name": "UrlExperiment", "checksum": "55762d28", "params": {"URL": "427007a51f9c475ca12861aa898f2894"}, "time": 1409501203, "salt": "UrlExperiment", "event": "exposure"}
+{"inputs": {"userid": 5}, "name": "UrlExperiment", "checksum": "55762d28", "params": {"URL": "f5955ed9215b4c1e99a52f36d899e95d"}, "time": 1409578304, "salt": "UrlExperiment", "event": "exposure"}
+{"inputs": {"userid": 6}, "name": "UrlExperiment", "checksum": "55762d28", "params": {"URL": "07d9061fa2bd46f1bdd5bca49f421715"}, "time": 1409627283, "salt": "UrlExperiment", "event": "exposure"}

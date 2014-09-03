@@ -5,13 +5,13 @@ Tarefas primárias
    -- Falar para o Ricardo criar um algumas questões e efetuar toda a parte com o edX Ora - Próxima reunião
    -- Instalar o edX forum e ver se há a necessidade de adicionar um pouco de código -- OK - o aluno de um arm não verá as discussões de outros alunos, somente o staff tem acesso a todas as conversas.
    -- Documentar o que já foi feito - PARCIAL
-   -- Permitir que seja adicionado mais uma opção nos testes A/B - TODO
+   -- Permitir que seja adicionado mais uma opção nos testes A/B - OK
    -- Mudar o ícone para criar um experimento -- OK
    -- Documentar todo o processo de instalação - PARCIAL
-   -- Color um ícone que permita adicionar mais uma opção para o experimento.
+   -- Color um ícone que permita adicionar mais uma opção para o experimento. - Ok
    -- Pegar dados estatísticos dos alunos matriculados no Curso - OK
    -- verificar se é necessário de mais alguma configuração adicional no smtp do servidor e mais algumas configurações do edX LMS que para os links do edX Studio. - PARCIAL
-   -- Quando um dado usuário fazer uma requisição de uma URL em que não tem  permissão para estar redirecionar para o COURSEWARE - TODOa
+   -- Quando um dado usuário fazer uma requisição de uma URL em que não tem  permissão para estar redirecionar para o COURSEWARE - TODO
 
 Tarefas secundárias
    -- Melhorar os campos do Histórico, o que possibilitará avaliar o comportamento dos usuários na rede.

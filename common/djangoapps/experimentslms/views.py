@@ -13,7 +13,7 @@ from student.models import UserProfile
 from django.contrib.auth.decorators import login_required
 
 def toUTF8(val):
-    """Converte algumas variaveis para UTF-8"""
+    """ Converte algumas variaveis para UTF-8 """
 
     try:
         if type(val) == type(5) or type(val) == type(44444444444444444444):
@@ -409,8 +409,6 @@ def expAnalise(request, course_id,  idExp):
                                     sectionExec.append(SCORE)
 
                                 ScoresPorquestaoCUser.append(sectionExec)
-
-
 
 
                     if usuario.versionExp.version == 'A':
