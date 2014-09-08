@@ -329,7 +329,6 @@ def index(request, course_id, chapter=None, section=None,
                 mythread.join()
 
 
-
         context = {
             'csrf': csrf(request)['csrf_token'],
             'accordion': render_accordion(request, course, chapter, section, field_data_cache),

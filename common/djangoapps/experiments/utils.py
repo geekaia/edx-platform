@@ -54,14 +54,14 @@ class CadVersao(Thread):
 # IDEIA -- criar uma função que permita comparar verificar a quantidade de registros com o nome do usuário deste experimento
 def NeedThread(user, course):
     """
-    Verifica se será necessário um thread para cadastrar o usuário. NÃO PRECISA CADASTRAR AINDA
+    Verifica se será necessário um thread para cadastrar o usuário.
 
     Passo 1 - pega todos os experimentos de um curso
     Passo 2 - Compara com o userChoice, caso seja igual ao de experimentos não é necessário um thread
     Passo 3 - retorna True se o número do userchoice tor diferente da quantidade de experimentos, caso seja igual retorna False
 
-    :param course:
-    :return:
+    :param course: curso atual
+    :return: false caso não precise de um Thread e True caso precise
     """
 
     # Pega a quantidade de experimentos de um curso
@@ -77,7 +77,6 @@ def NeedThread(user, course):
         return False
     else:
         return True
-
 
 
 def cadastraVersao(user,URL,urlExp):
@@ -283,7 +282,6 @@ def cadastraVersao(user,URL,urlExp):
         if len(verCads) > 0:
             cont = 0
             for verCad in verCads:
-
                 if cont > 1:
                     print "Deleting ", cont
                     verCad.delete()
@@ -296,7 +294,6 @@ def cadastraVersao(user,URL,urlExp):
 
         if userVersion.versionExp.sectionExp_url == URL:
             print "Quarto"
-
             return True
         else:
             print "Quinto"
@@ -403,8 +400,6 @@ def pulaURL(URL, user):
             expsChoices = UserChoiceExperiment.objects.filter(experimento=urlExp.experimento, userStudent=user)
 
             # Só será considerado TRUE se for igual a URL
-            print "Tamanho da dos Registros: ",  len(expsChoices)
-
             if len(expsChoices) == 1: # 1 pq o usuário só pode escolher 1 versão do experimento
                 # Verifica-se se a opção do experimento é a atual
                 # sempre pega o primeiro registro, pois só pode ter 1
