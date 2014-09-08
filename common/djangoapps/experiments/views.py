@@ -21,20 +21,14 @@ from xmodule.modulestore import Location
 from util.json_request import expect_json, JsonResponse
 from contentstore.utils import get_modulestore, get_lms_link_for_item
 from contentstore.views.access import has_course_access
-
 from experiments.models import *
 from models.settings.course_grading import CourseGradingModel
-
 from contentstore.utils import compute_publish_state
 from contentstore.views.helpers import _xmodule_recurse
-
 from django.http import HttpResponse
 import csv
-
 from experiments.models import *
 from django.contrib.auth.decorators import login_required
-
-
 # New EDX
 from opaque_keys.edx.keys import UsageKey, CourseKey
 
@@ -62,14 +56,6 @@ def EmailsExp(request,  course_key_string, idExp=None):
     :param idExp: ID do experimento
     :return: CSV file format
     """
-
-
-    # usage_key = CourseKey.from_string(course_key_string)
-    #
-    # # print "Course Location: ", courseKey
-    #
-    # if not has_course_access(request.user, usage_key):
-    #     raise PermissionDenied()
 
     usage_key = CourseKey.from_string(course_key_string)
 
@@ -123,17 +109,14 @@ def EmailsExp(request,  course_key_string, idExp=None):
 def DefineStrategy(request,  course_key_string, idExperiment=None):
 
     """
-    Permite alternar entre os operadores do PlanOut e permite especificar um design do experimento criado pelo JMP, R ou Minitab.
+    Permite alternar entre os operadores do PlanOut (UniformChoice e WeightedChoice) e especificar um design do experimento criado pelo JMP, R ou Minitab.
 
-    :param request:
+    :param request: http request default
     :param course_key_string:
     :param idExperiment: id do experimento
     :return: renderiza a página que pemrite definir a estratégia
     """
-
-
     mensagem = ""
-    mensagemBlock=''
     mensagemWeightedChoice = ''
     mensagemUniformChoice=''
     mensagemCustom=''
@@ -154,13 +137,7 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
     try:
 
         if request.POST:
-            print "Ola mundo cruel!!!"
-
             strategySel = request.POST['strategySel']
-
-
-            print "O que está na memória!!!:", strategySel, ' len:', len(strategySel)
-
             strategy.strategyType = strategySel
 
 
@@ -224,7 +201,6 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
             'elementosStrat': '',
             'pesos': pesos,
             'mensagem': mensagem,
-            'mensagemBlock': mensagemBlock,
             'mensagemWeightedChoice': mensagemWeightedChoice,
             'mensagemUniformChoice': mensagemUniformChoice,
             'mensagemCustom': mensagemCustom,
@@ -236,11 +212,11 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
 @login_required
 def experiments_handler(request, course_key_string):
     """
-    Mostra a listagem dos experimentos deste curso
+    Mostra a listagem dos experimentos deste curso.
 
-    :param request:
-    :param course_key_string:
-    :return:
+    :param request: http request default
+    :param course_key_string: slashes:USPx+CS0000+2014_1
+    :return: html renderizado
     """
 
     usage_key = CourseKey.from_string(course_key_string)
@@ -267,12 +243,12 @@ def experiments_handler(request, course_key_string):
 @expect_json
 def block_clone_handler(request, course_key_string):
     """
-    Permite clonar o conteúdo de uma dada semana do experimento. Além de clonar nesta função faz a definição do experimento. o que insere entradas nas
-    tabelas
+    Permite clonar o conteúdo de uma dada semana do experimento. Além de clonar, nesta função faz a definição do experimento. o que insere entradas nas
+    tabelas ExperimentDefinition, StrategyRandomization e OpcoesExperiment.
 
-    :param request:
-    :param course_key_string:
-    :return:
+    :param request: http request com parent_location (location do curso) e mais source_locator (location da section)
+    :param course_key_string: useless
+    :return: json com OK
     """
 
     if request.method in ('PUT', 'POST'):
@@ -298,29 +274,16 @@ def block_clone_handler(request, course_key_string):
         quantidade = 0
 
         for section in sections:
-            # section_locator = loc_mapper().translate_location(course.location.course_id, section.location, False, True)
-            print "<<<<<<<<<<< --------------->>>>>>>"
-            print "section: LOCATION    ", section.location
-            print "Seção Find: ", locatorSectionKey # Confusão translate_location pega o locator e locator_to_location pega o location
-            print "<<<<<<<<<<< --------------->>>>>>>"
 
             if locatorSectionKey == section.location:
                 NewLocatorItemSection = create_item(locatorCursokey, 'chapter', section.display_name_with_default, request)
 
-                print "New Location item: ", unicode(NewLocatorItemSection)
-                print "section.start: ", section.start
-                print "section locator: ", NewLocatorItemSection
-
-    #             # tem que Mudar para HomeWork, ou qualquer tipo que eu definir
+                # tem que Mudar para HomeWork, ou qualquer tipo que eu definir
                 SectionLocation =  NewLocatorItemSection
-    #
-                print "Course Location: ", NewLocatorItemSection
                 descript = get_modulestore(NewLocatorItemSection).get_item(NewLocatorItemSection)
-                print "Descript: ", descript
 
-    #             # Start Value
                 storeSection = get_modulestore(NewLocatorItemSection)
-    #
+
                 try:
                     existing_item = storeSection.get_item(SectionLocation)
 
@@ -339,16 +302,6 @@ def block_clone_handler(request, course_key_string):
                 subsections = section.get_children()
                 quantidade = 0
 
-
-                # Aqui adiciona o campo do Experimento e a versão que pertence
-                # neste caso, utilizaremos A e B
-
-                # Será adicionado os campos EXPERIMENTO e VERSÃO do EXPERIMENTO no campo da Section
-
-
-                # Verifique se há um experimento para este location
-                # Se tiver, retorna o objeto experimento experimento
-
                 if temExp:
                     opcExp3 = OpcoesExperiment()
                     opcExp3.experimento = expSection
@@ -365,17 +318,12 @@ def block_clone_handler(request, course_key_string):
                     st = StrategyRandomization()
                     st.strategyType = 'UniformChoice'
                     st.percents = '0.0;0.0'
-                    st.probability = 0.0
-                    st.quantAlunos = 0
-                    st.tamanhoBlocos = 0
-                    st.quantBlocos = 0
                     st.save()
 
                     # Experiment defintion
                     exp = ExperimentDefinition()
                     exp.course = request.json['parent_locator']
                     exp.userTeacher = request.user
-                    exp.status = 'paused'
                     now = datetime.datetime.now()
                     exp.descricao='MyExperiment %s ' % now
                     exp.strategy = st
@@ -500,6 +448,14 @@ def block_clone_handler(request, course_key_string):
 
 
 def getURLSection(course_location, loc):
+    """
+    Retorna a url_name de uma section.
+
+    course_location: endereço do curso
+    loc: endereço de uma section
+    return: url_name de loc
+    """
+
     curso = modulestore().get_item(course_location, depth=3)
     sections = curso.get_children()
 
@@ -510,67 +466,26 @@ def getURLSection(course_location, loc):
         if section.location == loc:
             print "Url Name1: ", section.url_name
             return section.url_name
-#
-#
-# def getMetadata(parent_location, duplicate_source_location, parent_destination, display_name=None, user=None):
-#     """
-#     Duplicate an existing xblock as a child of the supplied parent_location.
-#     """
-#
-#     # print "parent_location: ", parent_location
-#     # print "duplicate_source_location: ", duplicate_source_location
-#     # print "parent_destination: ", parent_destination
-#     # print
-#
-#
-#     print "Dp primeiro"
-#     store = get_modulestore(duplicate_source_location)
-#
-#     print "Dp segundo -- store: ", store
-#     source_item = store.get_item(duplicate_source_location)
-#
-#     print "Dp terceiro -- Source-item: ", source_item
-#     # Change the blockID to be unique.
-#     dest_location = parent_destination.replace(name=uuid4().hex)
-#
-#     print "Dp quarto -- Dest_location: ", dest_location
-#     category = duplicate_source_location.category
-#
-#     print "Dp quinto -- Categoria: ", category
-#
-#     # Update the display name to indicate this is a duplicate (unless display name provided).
-#     duplicate_metadata = own_metadata(source_item)
-#
-#     return duplicate_metadata, source_item.data if hasattr(source_item, 'data') else None, category
 
-#
+
 def create_item(parent_location, category, display_name, request, dt_metadata=None, datacomp=None):
 
     """
     Cria um item no mongoDB de acordo com a categoria especificada.
 
-    :param parent_location:
+    :param parent_location: onde sera criado o elemento
     :param category: categoria do experimento sequential, chapter e vertical
-    :param display_name:
-    :param request:
-    :param dt_metadata:
-    :param datacomp:
-    :return:
+    :param display_name: nome que tera o componente criado
+    :param dt_metadata: useless
+    :param datacomp: useless
+    :return: endereço do item criado
     """
 
-
-    """View for create items."""
-
-    print "-- Segundo -- "
     parent = get_modulestore(category).get_item(parent_location)
-    print "-- Terceiro -- "
     dest_location = parent_location.replace(category=category, name=uuid4().hex)
-    print "-- Quarto -- "
 
     if not has_course_access(request.user, parent_location):
         raise PermissionDenied()
-    print "-- Quinto -- "
-    # get the metadata, display_name, and definition from the request
 
     metadata = {}
     data = None
@@ -578,46 +493,30 @@ def create_item(parent_location, category, display_name, request, dt_metadata=No
     if dt_metadata is not None:
         metadata = dt_metadata
         data = datacomp
-    print "-- Sexto -- "
 
     if display_name is not None:
         metadata['display_name'] = display_name
 
-    print "-- Sétimo -- "
     get_modulestore(category).create_and_save_xmodule(
         dest_location,
         definition_data=data,
         metadata=metadata,
         system=parent.runtime,
     )
-    print "-- oitavo -- "
+
 
     # # TODO replace w/ nicer accessor
     if not 'detached' in parent.runtime.load_block_type(category)._class_tags:
         parent.children.append(dest_location) # Vamos ver se fuciona
-        print "-- nono -- "
         get_modulestore(parent.location).update_item(parent, request.user.id)
-        print "-- décimo -- "
-
 
     return dest_location
 
 
-# # comp_locator = loc_mapper().translate_location(course.location.course_id, comp.location, False, True)
-# # fonte = unit_location # parent_locator = BlockUsageLocator(request.json['parent_locator'])
-# # destino = NewLocationItem # Unit duplicada da Fonte
-#
-# # duplicate_source_locator = comp_locator
-#
-#
 def duplicate_item(parent_location, duplicate_source_location, display_name=None, user=None):
     """
     Duplicate an existing xblock as a child of the supplied parent_location.
     """
-    print "parent_location: ", parent_location
-    print "duplicate_source_location: ", duplicate_source_location
-    #print "parent_destination: ", parent_destination
-    print
 
     store = get_modulestore(duplicate_source_location)
     source_item = store.get_item(duplicate_source_location)

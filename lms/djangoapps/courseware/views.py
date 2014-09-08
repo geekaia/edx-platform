@@ -55,9 +55,7 @@ template_imports = {'urllib': urllib}
 
 CONTENT_DEPTH = 2
 
-from experiments.utils import VerABprint
-from experiments.utils import CadVersao
-
+from experiments.utils import *
 
 
 def user_groups(user):
@@ -111,35 +109,27 @@ def render_accordion(request, course, chapter, section, field_data_cache):
     request.user = user	 # keep just one instance of User
     toc = toc_for_course(user, request, course, chapter, section, field_data_cache)
 
-    # Passa somente o que e para passar
-
-
-    print "Estou no Render Acordion"
-
-
-    i =0
-
+    i=0
     while i < len(toc):
-        mythread = CadVersao(toc[i]['url_name'], request.user)
-        mythread.start()
-        mythread.join()
-        imprimir = mythread.getResult()
+        need = NeedThread(request.user, course)
+
+        if need:
+            print "Need a thread"
+            mythread = CadVersao(toc[i]['url_name'], request.user)
+            mythread.start()
+            mythread.join()
+            imprimir = mythread.getResult()
+        else:
+            print "Doesn't need a thread"
+            imprimir = VerABprint(toc[i]['url_name'], request.user)
 
         if imprimir == False:
             del toc[i]
         else:
             i+=1
 
-    # for chapter in toc:
-    #     mythread = CadVersao(chapter['url_name'], request.user)
-    #     mythread.start()
-    #     mythread.join()
-    #     imprimir = mythread.getResult()
-    #
-    #     if imprimir == False:
-    #         del toc[cont]
-    #
-    #     cont = cont+1
+
+    print "Course: ", course, "COURSE LOCATION: ", course.location , " Course id deprecated: ", course.id.to_deprecated_string
 
     context = dict([
         ('toc', toc),
@@ -271,7 +261,6 @@ def chat_settings(course, user):
     }
 
 
-
 @login_required
 @ensure_csrf_cookie
 @cache_control(no_cache=True, no_store=True, must_revalidate=True)
@@ -332,9 +321,13 @@ def index(request, course_id, chapter=None, section=None,
 
         # Se nao tiver uma versao entao a cadastra
         for chp in toc:
-            mythread = CadVersao(chp['url_name'], request.user)
-            mythread.start()
-            mythread.join()
+            need = NeedThread(request.user, course)
+
+            if need:
+                mythread = CadVersao(chp['url_name'], request.user)
+                mythread.start()
+                mythread.join()
+
 
 
         context = {
@@ -785,12 +778,33 @@ def _progress(request, course_key, student_id):
     student = User.objects.prefetch_related("groups").get(id=student.id)
 
     courseware_summary = grades.progress_summary(student, request, course)
-    studio_url = get_studio_url(course_key, 'settings/grading')
-    grade_summary = grades.grade(student, request, course)
 
     if courseware_summary is None:
         #This means the student didn't have access to the course (which the instructor requested)
         raise Http404
+    else:
+        i=0
+
+        while i < len(courseware_summary):
+            need = NeedThread(request.user, course)
+
+            if need:
+                print "Precisa de thread"
+                mythread = CadVersao(courseware_summary[i]['url_name'], request.user)
+                mythread.start()
+                mythread.join()
+                imprimir = mythread.getResult()
+            else:
+                print "Nao precisa de thread"
+                imprimir = VerABprint(courseware_summary[i]['url_name'], request.user)
+
+            if imprimir == False:
+                del courseware_summary[i]
+            else:
+                i += 1
+
+    studio_url = get_studio_url(course_key, 'settings/grading')
+    grade_summary = grades.grade(student, request, course)
 
     context = {
         'course': course,

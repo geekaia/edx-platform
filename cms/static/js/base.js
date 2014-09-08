@@ -312,9 +312,6 @@ function _duplicateSection($el, type) {
 
 
 
-
-
-
 function _deleteItem($el, type) {
     var confirm = new PromptView.Warning({
         title: gettext('Delete this ' + type + '?'),

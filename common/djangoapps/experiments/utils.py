@@ -30,7 +30,9 @@ lock = threading.Lock()
 
 class CadVersao(Thread):
     """
-        Este thread assegura que todos só serão cadastrados um usuário por vez, o que permite avaliar
+        Este thread propicia que as entradas na tabela UserChoiceExperiment só serão cadastradas um por vez, pois é necessário ter uma ordem
+        pré-estabelecida e isto assegura que a ordem será respeitada, assim como garante que não serão inseridos 2 registros
+        de um experimento.
     """
 
     def __init__(self, chapter, usuario):
@@ -49,9 +51,38 @@ class CadVersao(Thread):
         return self.vercad
 
 
-def cadastraVersao(user,URL,urlExp ):
+# IDEIA -- criar uma função que permita comparar verificar a quantidade de registros com o nome do usuário deste experimento
+def NeedThread(user, course):
     """
-    Esta função faz a randomização e em seguida faz o cadastro na entidade UserChoiceExperiment. A randomização ocorre de acordo com o uqe estiver
+    Verifica se será necessário um thread para cadastrar o usuário. NÃO PRECISA CADASTRAR AINDA
+
+    Passo 1 - pega todos os experimentos de um curso
+    Passo 2 - Compara com o userChoice, caso seja igual ao de experimentos não é necessário um thread
+    Passo 3 - retorna True se o número do userchoice tor diferente da quantidade de experimentos, caso seja igual retorna False
+
+    :param course:
+    :return:
+    """
+
+    # Pega a quantidade de experimentos de um curso
+    listExps = ExperimentDefinition.objects.filter(course=course.location)
+    # Pega a quantidade de registros da tabela
+    tamanho = 0
+
+    for exp in listExps:
+        listOpcs = UserChoiceExperiment.objects.filter(experimento=exp, userStudent=user)
+        tamanho += len(listOpcs)
+
+    if len(listExps) == tamanho:
+        return False
+    else:
+        return True
+
+
+
+def cadastraVersao(user,URL,urlExp):
+    """
+    Esta função faz a randomização e em seguida faz o cadastro na entidade UserChoiceExperiment. A randomização ocorre de acordo com o que estiver
     definido na entidade StrategyRandomization no campo strategyType. Atualmente é possível alternar entre as randomizações:
             UniformChoice, WeightedChoice, PlanoutScript e CustomDesign (design do experimento criado pelo R, JMP, SAS ou Minitab)
 
@@ -69,13 +100,9 @@ def cadastraVersao(user,URL,urlExp ):
         CHOICES=[]# Opções do experimento. Este é o parâmetro do PlanOut
         lenV={} # Tamanh das versões
 
+        URLChoice = ""
 
-        listBLOCOS = []
-        URLChoice=""
-
-        max=0
         curso = None
-
         strat=''
         ExpPart = None
         versao = None
@@ -90,9 +117,6 @@ def cadastraVersao(user,URL,urlExp ):
             lenV[opc.version] = len(quant)
             ExpPart = opc.experimento
             strat = opc.experimento.strategy # Pega a estratégia de randomização
-
-            if lenV[opc.version] >= max:
-                max = lenV[opc.version]
 
         CHOICESG = CHOICES
         exp = None
@@ -168,7 +192,6 @@ def cadastraVersao(user,URL,urlExp ):
                     procedure = Interpreter(jsondata, self.salt, kwargs)
                     params.update(procedure.get_params())
 
-
                 class ExpPlanoutScript(SimpleInterpretedExperiment):
                     filename = strat.planoutJson
 
@@ -193,7 +216,6 @@ def cadastraVersao(user,URL,urlExp ):
                 print "Erro nesta randomização"
 
         try:
-
             if len(URLChoice) == 0:
                 URLChoice = exp.get('URL')
         except:
@@ -216,10 +238,6 @@ def cadastraVersao(user,URL,urlExp ):
         num = CHOICES.index(URLChoice)
         if num == 0 and conversao == False :
             versao = 'A' # Removi o balanceamento de 50 50
-            # if max != lenV['A']:
-            #     versao = 'A'
-            # else:
-            #     versao = 'B'
 
         elif num == 1 and conversao == False:
             versao = 'B'
@@ -297,10 +315,8 @@ def VerABprint(URL, user):
     :param URL: endereço usado no LMS
     :param user:  usuário que fez a requisição
     :return: False não mostra o conteúdo e true mostra o conteúdo no LMS
-
     """
     try:
-
         """
         Todos os usuários Staffs tem acesso a todas as versões dos usuários.
         """
@@ -331,14 +347,11 @@ def VerABprint(URL, user):
         # Verifica se esta URL foi escolhida pelo usuario
         try:
             # Se o experimento desta URL já foi escolhida pelo aluno como
-
-
             # Só será considerado TRUE se for igual a URL
 
             if len(expsChoices) == 1: # 1 pq o usuário só pode escolher 1 versão do experimento
                 # Verifica-se se a opção do experimento é a atual
                 # sempre pega o primeiro registro, pois só pode ter 1
-
 
                 if expsChoices[0].versionExp.sectionExp_url == URL: # A variável do Experimento tb deve ser igual
                     print "Primeiro"
@@ -348,8 +361,6 @@ def VerABprint(URL, user):
                     return False
             else:
                 if len(expsChoices) == 0:
-
-                    print "Vamos cadastrar com um Thread"
                     return cadastraVersao(user,URL,urlExp)
                 else:
                     print "Terceiro"
@@ -403,9 +414,7 @@ def pulaURL(URL, user):
                 else:
                     print "ESTA URL NAO FOI SELECIONADA PELO USUARIO"
                     return True
-
         except:
-
             return False
 
     except:
@@ -413,9 +422,10 @@ def pulaURL(URL, user):
 
         return False
 
-
 def urlsExcluir(user):
     """
+    Procura por todas as urls que o usuário não escolheu dentre todos os experimentos.
+
     :param user: usuario que faz a requisicao da função em progress
     :return: lista de todas as URLs que não devem ser contabilizadas na hora de gerar o gráfico com o progresss do LMS
     """
@@ -433,7 +443,7 @@ def urlsExcluir(user):
             # Pega todas as urlS dos experimentos que o usuario participou
             listURLSeXPS = OpcoesExperiment.objects.filter(experimento=exPart.experimento)
 
-            if len(listURLSeXPS)>0:
+            if len(listURLSeXPS) > 0:
                 for urlsEXP in listURLSeXPS:
                     # Adiciona todos exceto as que o usuario escolheu
                     if exPart.versionExp.sectionExp_url != urlsEXP.sectionExp_url:
@@ -450,7 +460,7 @@ def ExcluirDiscussion(user, locationCourse):
      Verifica quais IDs (dos usuários) devem ser excluidos do forum e mais os ID's anônimos que devem ser excluidos.
      Como na listagem não tem como identificar uma simples postagem, foram adicionados uma entidade que conterá os ID's dos comentários.
 
-    :param user:
+    :param user: usuário do aluno
     :param locationCourse: location Course
     :return comentarioRemove: retorna uma lista dos IDS dos usuarios que devem ser removidos
     """

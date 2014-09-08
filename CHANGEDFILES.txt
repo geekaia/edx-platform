@@ -1,0 +1,70 @@
+Neste Arquivo segue a listagem dos arquivos que foram modificados para permitir a criação de testes randomizados
+
+
+Foram adicionados 2 módulos/apps na pasta commom:
+commom/djangoapps/experiments 
+commom/djangoapps/experimentlms
+
+
+cms/env/common.py
+
+Adicione
+Installed apps 
+ 'experiments',
+
+
+cms/url.py 
+urlpatterns += patterns(
+    'experiments.views',
+ ... 
+
+
+cms/statis/js/base.js
+
+
+
+lms/env/common.py
+Add
+Installed apps 
+'experiments',
+'experimentslms',
+
+
+lms/url.py 
+urlpatterns += (
+ ...
+
+
+Templates mudados e adicionados: 
+cms/templates/overview.html
+cms/templates/widgets/header.html
+cms/templates/base.html
+cms/templates/experiments/
+			  analiseExp.html
+			  estrategia.html
+			  experimentos.html
+
+lms/envs/commom.py
+
+Permite ter mais informações dos usuários
+REGISTRATION_EXTRA_FIELDS = {
+    'level_of_education': 'required',
+    'gender': 'required',
+    'year_of_birth': 'required',
+    'mailing_address': 'optional',
+    'goals': 'required',
+    'honor_code': 'required',
+    'city': 'required',
+    'country': 'required',
+}
+
+
+Hack no LMS 
+lms/courseware/views.py
+
+lm
+
+
+
+
+

@@ -240,7 +240,7 @@ def expAnalise(request, course_id,  idExp):
          'Resposta'  - resposta da questao -- TODO
          'Historico Resps' - Historico de cada Questao -- TODO
 
-        Tais informaçoes podem ser utilizadas para realizaçao de uma analise com Softwares como Excell, LibreOffice e outros.
+        Tais informaçoes podem ser utilizadas para realizaçao de uma analise com alguns softwares, tais como: Excell, LibreOffice e outros.
     """
 
     # Ideias

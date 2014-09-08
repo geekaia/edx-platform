@@ -71,12 +71,7 @@ from django.conf import settings
 
       <div class="chapters">
         %for chapter in courseware_summary:
-        <% imprimir = VerABprint(chapter['url_name'], user) %>
-        %if not chapter['display_name'] == "hidden":
-
-        % if imprimir:
-
-
+          %if not chapter['display_name'] == "hidden":
         <section>
           <h2>${ chapter['display_name'] }</h2>
 
@@ -132,7 +127,6 @@ from django.conf import settings
           </div> <!--End sections-->
         </section> <!--End chapter-->
         %endif
-        % endif  <!-- End Experiment print-->
         %endfor
       </div> <!--End chapters-->
 

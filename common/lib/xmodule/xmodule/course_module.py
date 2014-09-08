@@ -790,9 +790,9 @@ class CourseDescriptor(CourseFields, SequenceDescriptor):
 
             if self.urlsexcluir != None:
 
-                print "URLEXCLUIR IS NOT NONE"
+                print "URLEXCLUIR IS NOT NONE", len(self.urlsexcluir)
 
-                if len(self.urlsexcluir)>0:
+                if len(self.urlsexcluir) > 0:
                     print "URLEXCLUIR MAIOR QUE 0"
 
                     for urlEx in self.urlsexcluir:

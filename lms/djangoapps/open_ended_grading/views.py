@@ -24,7 +24,7 @@ from open_ended_grading.utils import (
     STAFF_ERROR_MESSAGE, StudentProblemList, generate_problem_url, create_controller_query_service
 )
 
-from experiments.utils import CadVersao
+from experiments.utils import *
 
 log = logging.getLogger(__name__)
 
@@ -117,17 +117,22 @@ def find_peer_grading_module(course, user):
         urlSection = generate_problem_url(problem_url_parts, base_course_url).split('courseware')[1].split('/')[1]
         print "Problem url parts: ", urlSection
 
-        mythread = CadVersao(urlSection, user)
-        mythread.start()
-        mythread.join()
-        imprimir = mythread.getResult()
+
+        need = NeedThread(user, course)
+
+        if need:
+            mythread = CadVersao(urlSection, user)
+            mythread.start()
+            mythread.join()
+            imprimir = mythread.getResult()
+        else:
+            imprimir = VerABprint(urlSection, user)
+
 
         if imprimir == False:
-            print "Removendo: ", urlSection
             del items[i]
         else:
             i+=1
-            print "Mantem: ", urlSection
 
             problem_url = generate_problem_url(problem_url_parts, base_course_url)
 
