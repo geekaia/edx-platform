@@ -4,11 +4,17 @@ from django.contrib.auth.models import User
 
 """
   by: Jacinto José Franco
+  This file contains all necessary classes to make the randomized experiments run
+  
   Este aquivo contem todas as entidades necessarias para fazer com que os experimentos randomizados funcionem
 """
 
 class StrategyRandomization(models.Model):
     """
+    This class stores all strategy definitions for randomizing the experiments. This will
+    allow the change in algorithm (Planot Operator) as well as the definition of the Design of a
+    personalized experiment
+
     Esta entidade armazena as definições das estratégias de randomização dos experimentos,
     o que possibilita mudar do algoritmo (Operador do PlanOut) e também definir um Design
     do experimento personalizado.
@@ -28,6 +34,8 @@ class StrategyRandomization(models.Model):
 
 class ExperimentDefinition(models.Model):
     """
+    This class allows for the storage of all experiment definitions, where a row corresponds to the experiment in a week within edX
+
     Esta entidade permite armazenar as definições dos experimentos, onde uma linha correspondente a um experimento de uma semana do edX.
     """
 
@@ -41,6 +49,9 @@ class ExperimentDefinition(models.Model):
 
 class OpcoesExperiment(models.Model):
     """
+    This class record the experiment options. In an AB test we have two arms or two versions of the intervention. 
+    SectionExp identified an arm in Studio, whereas sectionExp_url identifies an entitity in the LMS
+
     Nesta entidade grava-se as opções do experimento. Em um teste A/B são inseridas duas versões do experimento.
     SectionExp serve para identificar uma uma opção/arm no Studio, já sectionExp_url serve para identificar uma entidade no LMS.
     """
@@ -52,6 +63,10 @@ class OpcoesExperiment(models.Model):
 
 class UserChoiceExperiment(models.Model):
     """
+    This class stores all arms defined by the randomization defined under the StrategyRandomization, which is 
+    attributed to each learner. This allows for a previously defined version while keeping this version until
+    the end of the course.
+
     Esta entidade serve para armazenar as versões/arms definidas pela randomização definida em StrategyRandomization e atribuída
     para cada aluno, o que permite recuperar uma versão previamente definida e manter esta versão até o término do curso.
     """
@@ -72,6 +87,9 @@ class HistoricoQuestoes(models.Model):
 
 class AnonyMousPost(models.Model):
     """
+    This table stores the id and user from anonymous comments. This makes it easier to recover them, since this query
+    will not return any data on the anonymous posts back to the LMS
+
     Com esta tabela armazena-se os o id e o usuario dos comentários anônimos. Desta forma fica mais fácil para recuperar, pois na lista
     de retornada para o LMS não há nenhuma identificação acerta dos posts post anônimos.
     """
