@@ -30,6 +30,10 @@ lock = threading.Lock()
 
 class CadVersao(Thread):
     """
+        This thread allows for entries to the table UserChoiceExperiment only be written one at a time. This is necessary since 
+        there has to be a pre-established order, ensuring that the order be respected, also guaranteeing that there will not be
+        any two entries for a single experiment
+
         Este thread propicia que as entradas na tabela UserChoiceExperiment só serão cadastradas um por vez, pois é necessário ter uma ordem
         pré-estabelecida e isto assegura que a ordem será respeitada, assim como garante que não serão inseridos 2 registros
         de um experimento.
@@ -54,11 +58,25 @@ class CadVersao(Thread):
 # IDEIA -- criar uma função que permita comparar verificar a quantidade de registros com o nome do usuário deste experimento
 def NeedThread(user, course):
     """
+    Verify whether it is necessary to have a thread to register a user
+
+    Step 1: take all experiment from a course
+    Step 2: compare with userChoice, and if it has an equal number of experiments then a thread is not necessary
+    Step 3: return True if the number from userchoice is different from the number of experiments, and if it is equatl
+    then return False
+
+    :param course: current course
+    :return: false if there is no need for a Thread and True if it is NeedThread
+
+
+
+
+
     Verifica se será necessário um thread para cadastrar o usuário.
 
     Passo 1 - pega todos os experimentos de um curso
     Passo 2 - Compara com o userChoice, caso seja igual ao de experimentos não é necessário um thread
-    Passo 3 - retorna True se o número do userchoice tor diferente da quantidade de experimentos, caso seja igual retorna False
+    Passo 3 - retorna True se o número do userchoice for diferente da quantidade de experimentos, caso seja igual retorna False
 
     :param course: curso atual
     :return: false caso não precise de um Thread e True caso precise
@@ -81,6 +99,21 @@ def NeedThread(user, course):
 
 def cadastraVersao(user,URL,urlExp):
     """
+    This function creates a randomization and right after creates a registry for the entity UserChoiceExperiment. Randomization happen in an 
+    agreement between whatever might be expressed in the StrategyRandomization entity in the strategyType field. Currently, it is possible
+    to alternate between the two randomization schemes: UniformChoice, WeightedChoice, PlanoutScript and CustomDesign (experiment design
+        done through R, JMP, SAS or Minitab)
+
+    :param user: student
+    :param URL: url that the use is attempting to access
+    :param urlExp:
+    :return: file in CSV format
+
+
+
+
+
+
     Esta função faz a randomização e em seguida faz o cadastro na entidade UserChoiceExperiment. A randomização ocorre de acordo com o que estiver
     definido na entidade StrategyRandomization no campo strategyType. Atualmente é possível alternar entre as randomizações:
             UniformChoice, WeightedChoice, PlanoutScript e CustomDesign (design do experimento criado pelo R, JMP, SAS ou Minitab)
