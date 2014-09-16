@@ -50,6 +50,15 @@ log = logging.getLogger(__name__)
 @login_required
 def EmailsExp(request,  course_key_string, idExp=None):
     """
+    Returns the list of email addresses for ARM {{define}}, which allows for the instructor to send messages to specific groups
+
+    :param request: httprequest default
+    :param idExp: experiment
+    :return: CSV file format
+
+
+
+
     Retorna a lista de e-mails por ARM, o que pode permitir que o professor envie e-mails para um grupo em específico.
 
     :param request: httprequest default
@@ -109,6 +118,20 @@ def EmailsExp(request,  course_key_string, idExp=None):
 def DefineStrategy(request,  course_key_string, idExperiment=None):
 
     """
+    Allows for switching among PlanOut operators (UniformChoice and WeightedChoice) as well as specifying an experimental design created through 
+    JMP, R or Minitab
+
+    :param request: http request default
+    :param course_key_string:
+    :param idExperiment: experiment id 
+    :return: render pages which allow for strategy definition
+
+
+
+
+
+
+
     Permite alternar entre os operadores do PlanOut (UniformChoice e WeightedChoice) e especificar um design do experimento criado pelo JMP, R ou Minitab.
 
     :param request: http request default
@@ -212,6 +235,17 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
 @login_required
 def experiments_handler(request, course_key_string):
     """
+    Displays the experiment list for the current course
+
+    :param request: http request default
+    :param course_key_string: slashes:USPx+CS0000+2014_1
+    :return: rendered html 
+
+
+
+
+
+
     Mostra a listagem dos experimentos deste curso.
 
     :param request: http request default
@@ -243,6 +277,11 @@ def experiments_handler(request, course_key_string):
 @expect_json
 def block_clone_handler(request, course_key_string):
     """
+
+
+
+
+    
     Permite clonar o conteúdo de uma dada semana do experimento. Além de clonar, nesta função faz a definição do experimento. o que insere entradas nas
     tabelas ExperimentDefinition, StrategyRandomization e OpcoesExperiment.
 
