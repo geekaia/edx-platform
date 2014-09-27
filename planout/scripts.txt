@@ -1,0 +1,35 @@
+Abaixo há algumas idéias de scripts que podem ser utilizados.
+
+Nos scripts, obrigatoriamente, deve-se retorna uma variável chamada URL, que é o resultado retornado pela classe que fará o parse do JSON. Para o protótipo CHOICES[0] corresponde ao Arm A, CHOICES[1] -- Arm B e CHOICES[2] -- Arm C caso haja. Abaixo iremos mostrar alguns exemplos de scripts do PlanOut.
+
+**Script 1**: Randomização Uniform. Neste exemplo todos os Arms tem a mesma quantidade de probabilidade. Esta é exatamente a randomizção padrão do protótipo
+URL = uniformChoice(choices=CHOICES, unit=userid);
+
+**Script 2**: Randomização com pesos. A primeira Arm tem 70% de chances de ser escolhido, enquanto que o segundo tem 30%
+URL = weightedChoice(choices=CHOICES, weights=[0.7, 0.3] unit=userid);
+
+
+**Script 3**: Randomização estratificada.Isto nos permite determinar uma porcentagem de alunos de um grupo específico. Neste exemplo definimos que 50% dos homens podem cair no Arm A, todas as mulheres irão para o Arm B. Caso o estudante não tenha entrado nem no primeiro e nem no segundo if, será efetuado a randomização pelo operador uniformChoice. Por enquanto, os scripts podem criar condições combinadas com IDADE, CIDADE, PAIS e INSTRUCAO.
+
+p1 = BernoulliTrial(p=0.5, unit=userid)
+if(SEXO=='m' && p1)
+{
+  URL = CHOICES[0];
+} else if (SEXO=='f')
+{
+  URL = CHOICES[1];
+} else {
+  URL = uniformChoice(choices=CHOICES, unit=userid);
+}
+
+**Script 4**: Define uma Arm de acordo com o país. Neste exemplo os alunos do Brasil conseguirão o Arm A, dos EUA o Arm B e os demais podem ter qualquer um dos Arms do experimento.
+
+if(PAIS=='BR')
+{
+  URL = CHOICES[0];
+} else if (PAIS=='US')
+{
+  URL = CHOICES[1]; 
+} else {
+  URL = uniformChoice(choices=CHOICES, unit=userid);
+}
