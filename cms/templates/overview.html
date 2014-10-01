@@ -191,6 +191,7 @@ require(["domReady!", "jquery", "js/models/location", "js/models/section", "js/v
                       </li>
 
                         <%
+                        arms = ['A', 'B', 'C', 'D', 'D', 'F']
                         try:
                             exp = OpcoesExperiment.objects.get(sectionExp='%s' % section_locator)
                             versao = exp.version
@@ -201,13 +202,24 @@ require(["domReady!", "jquery", "js/models/location", "js/models/section", "js/v
                           %>
                         %if versao!='':
                             <li class="actions-item">
-                              <b>Opt: ${versao}</b>
+                                %if exp.experimento.strategy.strategyType == 'fatorial':
+                                  <b>Comb.: ${arms.index(versao)} </b>
+                                %else:
+                                  <b>Opt: ${versao}</b>
+                                %endif
+
                            </li>
                            % if versao=='B' and tamanho==2:
                             <li class="actions-item duplicar">
                               <a href="#" data-tooltip="${_('Create a new version')}" class="action duplicate-section-button"><i  class="icon-plus"></i><span class="sr">${_("Create a new Experiment")}</span></a>
                             </li>
                            %endif
+                           % if versao=='C' and tamanho==3:
+                            <li class="actions-item duplicar">
+                              <a href="#" data-tooltip="${_('Create a new version')}" class="action duplicate-section-button"><i  class="icon-plus"></i><span class="sr">${_("Create a new Experiment")}</span></a>
+                            </li>
+                           %endif
+
                         %else:
                         <li class="actions-item duplicar">
                           <a href="#" data-tooltip="${_('Create a new experiment')}" class="action duplicate-section-button"><i  class="icon-flask"></i><span class="sr">${_("Create a new Experiment")}</span></a>

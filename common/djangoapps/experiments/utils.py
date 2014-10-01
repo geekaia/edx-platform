@@ -209,9 +209,62 @@ def cadastraVersao(user,URL,urlExp):
                 print "Deu Merda na leitura do campo"
                 deuerro = True
 
+        elif strat.strategyType == 'fatorial':
+            try:
+                # Script:
+                # Pega a quantidade de versões para este design deste experimento
+                # Confronta com a do Design
+
+                linhas = strat.customDesign.splitlines()
+                tamL = len(linhas)
+
+                # usuarios versão experimento
+                choicesSelUsr = UserChoiceExperiment.objects.filter(experimento=ExpPart)
+                lenC = len(choicesSelUsr)+1
+
+                linRand = linhas[lenC]
+
+                fat1 = int(linRand.split(';')[4]) # 7;1;1;1;2;1
+                fat2 = int(linRand.split(';')[5]) # 7;1;1;1;2;1
+
+                """
+                Combinação	Fator1	Fator2
+                0           1     	  1
+                1	        2         2
+                2	        1         2
+                3           2         1
+                """
+
+                if fat1==1 and fat2==1:
+                    ver=0
+                elif fat1==2 and fat2==2:
+                    ver=1
+                elif fat1==1 and fat2==2:
+                    ver=2
+                elif fat1==2 and fat2==1:
+                    ver=3
+
+                # Internamente ainda funciona com versoes A, B, C e D
+                if ver == 0:
+                    versao ='A'
+                elif ver == 1:
+                    versao = 'B'
+                elif ver == 2:
+                    versao = 'C'
+                else:
+                    versao = 'D'
+
+                URLChoice = CHOICESG[ver]
+
+                achei = True
+                conversao = True
+                deuerro = False
+
+            except:
+                print "Deu Merda na leitura do campo"
+                deuerro = True
 
         elif strat.strategyType == 'planOut':
-
             try:
                 class SimpleInterpretedExperiment(SimpleExperiment):
                   """Simple class for loading a file-based PlanOut interpreter experiment"""
@@ -246,6 +299,42 @@ def cadastraVersao(user,URL,urlExp):
             except:
                 deuerro = True
                 print "Erro nesta randomização"
+
+        # adicionei isso para o fatorial design
+        try:
+            f1 = exp.get('fat1')
+            f2 = exp.get('fat2')
+
+            fat1=int(f1)
+            fat2=int(f2)
+
+            if fat1==1 and fat2==1:
+                ver=0
+            elif fat1==2 and fat2==2:
+                ver=1
+            elif fat1==1 and fat2==2:
+                ver=2
+            elif fat1==2 and fat2==1:
+                ver=3
+
+            # Internamente ainda funciona com versoes A, B, C e D
+            if ver == 0:
+                versao ='A'
+            elif ver == 1:
+                versao = 'B'
+            elif ver == 2:
+                versao = 'C'
+            else:
+                versao = 'D'
+
+            URLChoice = CHOICESG[ver]
+
+            achei = True
+            conversao = True
+            deuerro = False
+        except:
+            print "Erro no Fatorial:", sys.exc_info()[0]
+
 
         try:
             if len(URLChoice) == 0:

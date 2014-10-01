@@ -127,11 +127,6 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
     :return: render pages which allow for strategy definition
 
 
-
-
-
-
-
     Permite alternar entre os operadores do PlanOut (UniformChoice e WeightedChoice) e especificar um design do experimento criado pelo JMP, R ou Minitab.
 
     :param request: http request default
@@ -199,6 +194,10 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
             elif strategySel == 'customdesign':
                 strategy.customDesign = request.POST['customDesign']
                 strategy.save()
+            elif strategySel == 'fatorial':
+                strategy.fatorial = request.POST['fatorial']
+                strategy.save()
+
 
     except:
         mensagem = 'Ocorreu um erro ao salvar a estratégia!!!'
@@ -242,10 +241,6 @@ def experiments_handler(request, course_key_string):
     :return: rendered html 
 
 
-
-
-
-
     Mostra a listagem dos experimentos deste curso.
 
     :param request: http request default
@@ -278,10 +273,6 @@ def experiments_handler(request, course_key_string):
 def block_clone_handler(request, course_key_string):
     """
 
-
-
-
-    
     Permite clonar o conteúdo de uma dada semana do experimento. Além de clonar, nesta função faz a definição do experimento. o que insere entradas nas
     tabelas ExperimentDefinition, StrategyRandomization e OpcoesExperiment.
 
@@ -289,6 +280,8 @@ def block_clone_handler(request, course_key_string):
     :param course_key_string: useless
     :return: json com OK
     """
+
+    letras = ['A', 'B', 'C', 'D']
 
     if request.method in ('PUT', 'POST'):
         #  Get location Course com base no valor passado pelo Json
@@ -346,7 +339,10 @@ def block_clone_handler(request, course_key_string):
                     opcExp3.experimento = expSection
                     opcExp3.sectionExp = "%s" % NewLocatorItemSection
                     opcExp3.sectionExp_url = '%s' % getURLSection(locatorCursokey, NewLocatorItemSection)
-                    opcExp3.version = 'C'
+
+                    lenOpcs = len(OpcoesExperiment.objects.filter(experimento=expSection))
+
+                    opcExp3.version = letras[lenOpcs]
                     opcExp3.save()
 
                     st = opcExp3.experimento.strategy
@@ -483,6 +479,8 @@ def block_clone_handler(request, course_key_string):
     dataR = {'ok': quantidade }
     #
     return JsonResponse(dataR)
+
+
 
 
 

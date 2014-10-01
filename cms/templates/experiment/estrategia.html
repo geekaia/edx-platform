@@ -26,6 +26,7 @@
                   <option value="WeightedChoice">Proportion</option>
                   <option value="planOut">planOut Script</option>
                   <option value="customdesign">Customizada</option>
+                  <option value="fatorial">Fatorial</option>
                 </select>
             </td>
         </tr>
@@ -49,6 +50,7 @@
     </form>
 </div>
 
+
 <div id="WChoice"  hidden="true" style="width: 400px; padding: 20px;">
     <br />
     <br />
@@ -68,6 +70,57 @@
         <br>
         <input type="submit" class="btn btn-primary" value="Salvar" />
     </form>
+</div>
+
+<div id="fatorial" style="padding: 20px;">
+  <table border='0'>
+    <tr>
+        <td>Carrega um design criado pelo Minitab, JMP ou R. <br /> Observe que as colunas devem ser separadas por ponto e vírgula
+            <br />Design<br /> Fator1 -- níveis: 1 e 2; Fator 2 -- níveis: 1 e 2
+            <br />
+            Ordem das colunas: StdOrder;RunOrder;PtType;Blocks;Fator1;Fator2
+  <br /> </td>
+    </tr>
+  </table>
+    Como é mostrado no CMS Overview
+    <table border="1">
+        <tr>
+            <td>Combinação</td>
+            <td>Fator1</td>
+            <td>Fator2</td>
+        </tr>
+        <tr>
+            <td>0</td>
+            <td>1</td>
+            <td>1</td>
+        </tr>
+        <tr>
+            <td>1</td>
+            <td>2</td>
+            <td>2</td>
+        </tr>
+        <tr>
+            <td>2</td>
+            <td>1</td>
+            <td>2</td>
+        </tr>
+        <tr>
+            <td>3</td>
+            <td>2</td>
+            <td>1</td>
+        </tr>
+    </table>
+  <br />
+
+  <form id="fatForm" method="POST">
+      Design Fatorial do experimento
+      <br />
+      <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}" />
+      <input type="hidden" id="strategyFatorial" name='strategySel' value="fatorial" />
+      <textarea id="fatorialid" name="fatorial" rows="5" class="form-control"  cols="30">${strat.fatorial}</textarea>
+      <br />
+      <input type="submit" id="salvar" class="btn btn-primary" value="Salvar" />
+  </form>
 </div>
 
 <div id="customizada" style="padding: 20px;">
@@ -192,6 +245,9 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
               ediv = document.getElementById('customizada');
               ediv.style.display = 'none';
 
+              ediv = document.getElementById('fatorial');
+              ediv.style.display = 'none';
+
               document.getElementById('strategySelUfChoice').value = 'UniformChoice';
               window.resizeTo(750,500);
 
@@ -210,6 +266,10 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
               ediv = document.getElementById('customizada');
               ediv.style.display = 'none';
 
+              ediv = document.getElementById('fatorial');
+              ediv.style.display = 'none';
+
+
               window.resizeTo(750,500);
           }
 
@@ -226,6 +286,10 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
 
               ediv = document.getElementById('planoutScript');
               ediv.style.display = 'block';
+
+              ediv = document.getElementById('fatorial');
+              ediv.style.display = 'none';
+
 
               // redimenciona a janela
               //window.moveTo(0, 0);
@@ -246,8 +310,31 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
               ediv = document.getElementById('customizada');
               ediv.style.display = 'block';
 
+              ediv = document.getElementById('fatorial');
+              ediv.style.display = 'none';
+
               // redimenciona a janela
               window.resizeTo(750,500);
+        }
+
+        if (selecao =='fatorial') {
+              ediv = document.getElementById('uniform');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('WChoice');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('planoutScript');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('customizada');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('fatorial');
+              ediv.style.display = 'block';
+
+              // redimenciona a janela
+              window.resizeTo(750,600);
         }
 
     }
@@ -273,6 +360,12 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
     if (strat =='customdesign') {
         e.selectedIndex = 3;
     }
+
+    if (strat =='fatorial') {
+        e.selectedIndex = 4;
+    }
+
+
 
     // Atualiza o DIV
     updateMainDiv();
