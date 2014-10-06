@@ -160,8 +160,94 @@ def cadastraVersao(user,URL,urlExp):
               def assign(self, params, userid):
                 params.URL = UniformChoice(choices=CHOICESG, unit=userid)
 
+            exp = UrlExperiment(userid=user.id)
+
+        elif strat.strategyType == 'crossover':
+
+            # Steps: 1 - pega todas as versões
+            letras = ['A', 'B', 'C', 'D', 'E']
+
+            dicts = {}
+            cont = 0
+            for i in CHOICESG:
+                dicts[letras[cont]] = options[letras[cont]].sectionExp_url
+                cont += 1
+
+            print "Dicts: ", dicts
+
+            OpcsSel = {}
+            # Procura por todas as versões anteriormente selecionadas que sejam do tipo CrossOver
+            #opcs = OpcoesExperiment.objects.filter(experimento=urlExp.experimento)
+            expsCourse = ExperimentDefinition.objects.filter(course=urlExp.experimento.course)
+
+            # Verifica as versões escolhidas em cada experimento
+            chs = []
+            quantNecess = 0
+
+            # Pega todos os experimentos crossover
+            for expc in expsCourse:
+                if expc.strategy.strategyType == "crossover" and expc.strategy.periodoRel == urlExp.experimento.strategy.periodoRel:
+                    if expc.strategy.periodoRel == expc: # É o mesmo que o atual, ou seja o primeiro crossover
+                        quantNecess = int(expc.strategy.periodos)
+
+                        try:
+                            choic = UserChoiceExperiment.objects.get(experimento=expc, userStudent=user)
+                            chs.append(choic.versionExp)
+                        except:
+                            print 'code 1 crossover'
+                    else:
+                        try:
+                            choic = UserChoiceExperiment.objects.get(experimento=expc, userStudent=user)
+                            chs.append(choic.versionExp)
+                        except:
+                            print 'code 2 crossover'
+
+            # Apaga todas as versoes ja foram usadas
+            print "Antes: "
+            print "Chs: ", chs
+            print "dicts: ", dicts
+
+            for ch in chs:
+                if ch.version in dicts:
+                    print "Tenho que remover ", ch.version
+                    del dicts[ch.version]
+
+            print "Depois"
+            print "Chs: ", chs
+            print "dicts: ", dicts
+
+            if len(dicts) == 0:
+                print 'Tudo ja foi selecionado!!!'
+
+            CHS =[]
+            for dic in dicts:
+                CHS.append( dicts[dic] )
+
+            print "Quant que será randomizada: ", CHS
+
+            # As opcoes ja selecionadas serao desconsideradas
+            class UrlExperiment(SimpleExperiment):
+                def assign(self, params, userid):
+                    params.URL = UniformChoice(choices=CHS, unit=userid)
 
             exp = UrlExperiment(userid=user.id)
+
+            try:
+                urlchoice = exp.get('URL')
+
+                for i in dicts:
+                    if dicts[i] == urlchoice:
+                        versao = i
+
+                conversao = True
+            except:
+                print 'erro'
+
+            print "UrlChoice: ", urlchoice
+            print "Versao: ", versao
+
+
+
         elif strat.strategyType == 'WeightedChoice':
             percents = []
 
@@ -372,19 +458,21 @@ def cadastraVersao(user,URL,urlExp):
         try:
 
             if curso:
-                expsCurso = ExperimentDefinition.objects.filter(course=curso)
+                if expc.strategy.strategyType != "crossover":
+                    expsCurso = ExperimentDefinition.objects.filter(course=curso)
 
-                print "tamanho: ", len(expsCurso)
+                    print "tamanho: ", len(expsCurso)
 
-                for experi in expsCurso:
-                    userChoice = UserChoiceExperiment.objects.filter(userStudent=user, experimento=experi)
+                    for experi in expsCurso:
+                        userChoice = UserChoiceExperiment.objects.filter(userStudent=user, experimento=experi)
 
-                    print "Len UserChoice: ", len(userChoice)
+                        print "Len UserChoice: ", len(userChoice)
 
-                    if len(userChoice) > 0:
-                        for usrC in userChoice:
-                            versao = usrC.versionExp.version
-                            print "EU JA ESCOLHI UMA VERSAO QUE E: ", usrC.versionExp.version
+                        if len(userChoice) > 0:
+                            for usrC in userChoice:
+                                versao = usrC.versionExp.version
+                                print "EU JA ESCOLHI UMA VERSAO QUE E: ", usrC.versionExp.version
+
 
         except:
             print "Erro ao pegar uma versão anterior"

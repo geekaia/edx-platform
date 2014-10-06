@@ -19,7 +19,7 @@ class StrategyRandomization(models.Model):
     o que possibilita mudar do algoritmo (Operador do PlanOut) e também definir um Design
     do experimento personalizado.
     """
-    # Strategy: Uniform, WeightedChoice, BernoulliTrial, RandomInteger, Block Randomization, full factorial design
+    # Strategy: Uniform, WeightedChoice, BernoulliTrial, RandomInteger, Block Randomization, full factorial design, crossover
     strategyType = models.CharField(max_length=50)
 
     # Lista de percents do WeightedChoice
@@ -34,6 +34,10 @@ class StrategyRandomization(models.Model):
 
     # Customizada --campo gerado por softwares como o JMP, SAS e R, o que possibilita criar todo tipo de randomização
     fatorial = models.TextField(blank=True, null=True)
+
+    #Quant. periodos que sera repetido o design. Neste caso 1 semana é um periodo
+    periodos = models.CharField(max_length=1, null=True)
+    periodoRel = models.ForeignKey("ExperimentDefinition", blank=True, null=True, on_delete=models.SET_NULL)
 
 class ExperimentDefinition(models.Model):
     """

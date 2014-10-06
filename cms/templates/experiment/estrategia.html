@@ -27,6 +27,7 @@
                   <option value="planOut">planOut Script</option>
                   <option value="customdesign">Customizada</option>
                   <option value="fatorial">Fatorial</option>
+                  <option value="crossover">Crossover</option>
                 </select>
             </td>
         </tr>
@@ -50,6 +51,62 @@
     </form>
 </div>
 
+<div id="crossover" hidden="true" style="padding: 20px;">
+    <br />
+    <br />
+    <form id="UfCrossover" method="POST">
+        <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}"  />
+        <input type="hidden" id="strategysellCrossover" name='strategySel' value="crossover" />
+        <br />
+        Quant. periodos:
+        <select name="periodos" class="form-control">
+            <option value="0"
+            % if periodos == '0':
+            selected
+            % endif
+            >0</option>
+
+            <option value="2"
+            % if periodos == '2':
+            selected
+            % endif
+            >2</option>
+            <option value="3"
+            % if periodos == '3':
+            selected
+        % endif
+            >3</option>
+            <option value="4"
+            % if periodos == '4':
+            selected
+        % endif
+            >4</option>
+        </select>
+
+        <br />
+        % if len(exps) > 0:
+            Periodo de:
+            <select id="expRel" name="expRel" class="form-control">
+              <option value="NaN">NaN</option>
+                % for exp in exps:
+                        <option value="${exp.id}"
+                                % if exp.id == expRel.id:
+                                    selected
+                                % endif
+                        >${exp.id} -- ${exp.descricao}</option>
+                % endfor
+            </select>
+        % endif
+        <br />
+
+
+        <font color="blue">${mensagemCrossOver}</font>
+        <br />
+
+        <br />
+        <input type="submit" class="btn btn-primary" value="Salvar" />
+    </form>
+</div>
 
 <div id="WChoice"  hidden="true" style="width: 400px; padding: 20px;">
     <br />
@@ -123,6 +180,8 @@
   </form>
 </div>
 
+
+
 <div id="customizada" style="padding: 20px;">
   <table border='0'>
     <tr>
@@ -133,7 +192,6 @@
         <td>Obs.: A primeira é a da versão (0 para A e 1 para B). Será considerado a randomização Uniform em caso de excessões.</td>
       </tr>
   </table>
-
 
   <br />
 
@@ -147,6 +205,7 @@
       <input type="submit" id="salvar" class="btn btn-primary" value="Salvar" />
   </form>
 </div>
+
 
 
 <div id="planoutScript"  style="padding: 20px;">
@@ -248,6 +307,9 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
               ediv = document.getElementById('fatorial');
               ediv.style.display = 'none';
 
+              ediv = document.getElementById('crossover');
+              ediv.style.display = 'none';
+
               document.getElementById('strategySelUfChoice').value = 'UniformChoice';
               window.resizeTo(750,500);
 
@@ -269,6 +331,8 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
               ediv = document.getElementById('fatorial');
               ediv.style.display = 'none';
 
+              ediv = document.getElementById('crossover');
+              ediv.style.display = 'none';
 
               window.resizeTo(750,500);
           }
@@ -288,6 +352,9 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
               ediv.style.display = 'block';
 
               ediv = document.getElementById('fatorial');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('crossover');
               ediv.style.display = 'none';
 
 
@@ -313,6 +380,9 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
               ediv = document.getElementById('fatorial');
               ediv.style.display = 'none';
 
+              ediv = document.getElementById('crossover');
+              ediv.style.display = 'none';
+
               // redimenciona a janela
               window.resizeTo(750,500);
         }
@@ -333,10 +403,35 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
               ediv = document.getElementById('fatorial');
               ediv.style.display = 'block';
 
+              ediv = document.getElementById('crossover');
+              ediv.style.display = 'none';
+
               // redimenciona a janela
               window.resizeTo(750,600);
         }
 
+        if (selecao =='crossover') {
+              ediv = document.getElementById('uniform');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('WChoice');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('planoutScript');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('customizada');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('fatorial');
+              ediv.style.display = 'none';
+
+              ediv = document.getElementById('crossover');
+              ediv.style.display = 'block';
+
+              // redimenciona a janela
+              window.resizeTo(750,600);
+        }
     }
 
     // Atualiza o select
@@ -363,6 +458,10 @@ PlanOut. Isto é uma precaução necessária para que o usuário sempre tenha um
 
     if (strat =='fatorial') {
         e.selectedIndex = 4;
+    }
+
+    if (strat =='crossover') {
+        e.selectedIndex = 5;
     }
 
 

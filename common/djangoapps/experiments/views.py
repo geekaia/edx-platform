@@ -138,6 +138,7 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
     mensagemWeightedChoice = ''
     mensagemUniformChoice=''
     mensagemCustom=''
+    mensagemCrossOver=''
 
     usage_key = CourseKey.from_string(course_key_string)
 
@@ -153,7 +154,6 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
     strategy = exp.strategy
 
     try:
-
         if request.POST:
             strategySel = request.POST['strategySel']
             strategy.strategyType = strategySel
@@ -197,11 +197,31 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
             elif strategySel == 'fatorial':
                 strategy.fatorial = request.POST['fatorial']
                 strategy.save()
+            elif strategySel == 'crossover':
+                strategy.periodos = request.POST['periodos']+''
+                print 'ok here'
+
+                try:
+                    ExpRel = request.POST['expRel']
+                    print "ExpRel: ", ExpRel
+                    strategy.periodoRel = ExperimentDefinition.objects.get(pk=int(ExpRel))
+                except:
+                    print "Error!"
+                    strategy.periodoRel = exp
+
+                print 'ok here2 ', strategy.periodoRel.id
+
+
+                strategy.save()
+                print "Design CrossOver saldo com sucesso"
+
+                mensagemCrossOver='Design CrossOver salvo com sucesso!!!'
 
 
     except:
         mensagem = 'Ocorreu um erro ao salvar a estratégia!!!'
 
+    print "Ola mundo "
     pesos = "<br />"
     arms = ['A', 'B', 'C', 'D', 'D', 'F']
 
@@ -210,6 +230,16 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
     # Pega a quantidade de versões
     #OpcoesExperiment.objects.filter(experimento=exp.)
     percents = strategy.percents.split(';')
+
+    exps = ExperimentDefinition.objects.filter(course=exp.course)
+
+    opcsSel = []
+
+    for exp in exps:
+        if exp.strategy.strategyType == 'crossover':
+            opcsSel.append(exp)
+
+
 
     for peso in percents:
         pesos += "Percent Arm "+arms[cont]+" <input type='text' name='peso"+str(cont)+"' class='form-control' value='"+str(peso)+"' /> <br />"
@@ -226,8 +256,11 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
             'mensagemWeightedChoice': mensagemWeightedChoice,
             'mensagemUniformChoice': mensagemUniformChoice,
             'mensagemCustom': mensagemCustom,
+            'mensagemCrossOver': mensagemCrossOver,
+            'exps': opcsSel,
+            'periodos': strategy.periodos,
+            "expRel": strategy.periodoRel,
         })
-
 
 @require_GET
 @ensure_csrf_cookie
