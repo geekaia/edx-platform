@@ -39,6 +39,9 @@ class StrategyRandomization(models.Model):
     periodos = models.CharField(max_length=1, null=True)
     periodoRel = models.ForeignKey("ExperimentDefinition", blank=True, null=True, on_delete=models.SET_NULL)
 
+    # cluster list json
+    clusterGroups = models.TextField(blank=True, null=True)
+
 class ExperimentDefinition(models.Model):
     """
     This class allows for the storage of all experiment definitions, where a row corresponds to the experiment in a week within edX

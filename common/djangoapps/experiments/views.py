@@ -217,11 +217,30 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
 
                 mensagemCrossOver='Design CrossOver salvo com sucesso!!!'
 
+            elif strategySel == 'cluster':
+                print "asdfasdf"
+                quantGroups = request.POST['quantG']
+                print "QuantGroups: ", quantGroups
+                grupos=[]
+
+                print "Estrategia cluster: "
+
+                for i in range(1, int(quantGroups)+1):
+                    seq = getSequencia(request, i)
+                    grupos.append(seq)
+
+                import json
+                print "Grupos Criados ", grupos
+
+                GruposJ = json.dumps(grupos)
+                strategy.clusterGroups = GruposJ
+
+                strategy.save()
 
     except:
         mensagem = 'Ocorreu um erro ao salvar a estratégia!!!'
 
-    print "Ola mundo "
+
     pesos = "<br />"
     arms = ['A', 'B', 'C', 'D', 'D', 'F']
 
@@ -261,6 +280,37 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
             'periodos': strategy.periodos,
             "expRel": strategy.periodoRel,
         })
+
+def getSequencia(request, linha):
+    criterios = [] # Lista com a sequencia
+
+    SEQ = [0, 3, 6, 9, 12]
+
+    for col in SEQ:
+        # gera um dicionario com criterios
+        try:
+            print "Get ", col, '|', linha
+            criterio = request.POST[str(col)+'|'+str(linha)]
+            print "Criterio", criterio
+            crit = {}
+            crit['tipo'] = criterio
+            crit['val'] = request.POST[str(col)+'|'+criterio+'|'+str(linha)]
+            print "Val: ", crit['val']
+
+            if criterio == 'age':
+                crit['c_age'] = request.POST[str(col)+'|condage|'+str(linha)]
+
+            if criterio == 'criteria':
+                break
+            else:
+                criterios.append(crit)
+
+        except:
+            print 'Nao tem criterio em col: ', col, ' row: ', linha
+
+    return criterios
+
+
 
 @require_GET
 @ensure_csrf_cookie
