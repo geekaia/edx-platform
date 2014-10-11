@@ -36,6 +36,7 @@ from django_future.csrf import ensure_csrf_cookie
 from django.core.context_processors import csrf
 
 from experiments.models import *
+import json
 
 # from contentstore.utils import (
 #     get_lms_link_for_item, add_extra_panel_tab, remove_extra_panel_tab,
@@ -139,6 +140,7 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
     mensagemUniformChoice=''
     mensagemCustom=''
     mensagemCrossOver=''
+    mensagemCluster=''
 
     usage_key = CourseKey.from_string(course_key_string)
 
@@ -229,11 +231,12 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
                     seq = getSequencia(request, i)
                     grupos.append(seq)
 
-                import json
                 print "Grupos Criados ", grupos
 
                 GruposJ = json.dumps(grupos)
                 strategy.clusterGroups = GruposJ
+
+                mensagemCluster='Design CrossOver salvo com sucesso!!!'
 
                 strategy.save()
 
@@ -254,15 +257,103 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
 
     opcsSel = []
 
-    for exp in exps:
-        if exp.strategy.strategyType == 'crossover':
-            opcsSel.append(exp)
-
-
+    for expC in exps:
+        if expC.strategy.strategyType == 'crossover':
+            opcsSel.append(expC)
 
     for peso in percents:
         pesos += "Percent Arm "+arms[cont]+" <input type='text' name='peso"+str(cont)+"' class='form-control' value='"+str(peso)+"' /> <br />"
         cont += 1
+
+    linhas = []
+    print "ClusterGroups: ", exp.strategy.clusterGroups
+
+
+    try:
+
+        GruposJson = json.loads(exp.strategy.clusterGroups)
+        row = 1
+        selectsgrupos = ''
+        for line in GruposJson:
+            linha="<tr id='"+str(row)+"'>"
+            SEQ = ['0', '3', '6', '9', '12']
+            cont = 0
+            print "Line: ", line
+            for cond in line:
+                if cont != 0:
+                    linha += '<td>and</td>'
+
+                if cond['tipo'] == 'sexo':
+                    selectsgrupos += "$('#"+SEQ[cont]+"sexo"+str(row)+"').val('"+cond['val']+"'); "
+                    linha += "<td>Sexo: <input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"'  value='sexo' /></td>"
+                    linha += "<td><select id='"+SEQ[cont]+"sexo"+str(row)+"' name='"+SEQ[cont]+"|sexo|"+str(row)+"'><option value='m'>Masculino</option><option value='f'>Feminino</option></select> </td>"
+                elif cond['tipo'] == 'escolaridade':
+                    selectsgrupos += "$('#"+SEQ[cont]+"escolaridade"+str(row)+"').val('"+cond['val']+"'); "
+                    linha +=  "<td>Escolaridade:  <input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"' value='escolaridade' /> </td>"
+                    linha += "<td><select id='"+SEQ[cont]+"escolaridade"+str(row)+"' name='"+SEQ[cont]+"|escolaridade|"+str(row)+"'><option value='p'> Doctorate </option> <option value='m'> Master's or professional degree</option><option value='b'> Bachelor's degree</option> <option value='a'> Associate's degree</option><option value='hs'> Secondary/high school</option> <option value='jhs'> Junior secondary/junior high/middle school</option><option value='el'>Elementary/primary school</option> <option value='none'>None</option> <option value='other'>Other</option> </td>"
+                elif cond['tipo'] == 'pais':
+                    selectsgrupos += "$('#"+SEQ[cont]+"pais"+str(row)+"').val('"+cond['val']+"'); "
+                    from django_countries.countries import COUNTRIES
+                    options = ''
+
+                    for country in COUNTRIES:
+                        options += "<option value='"+country[0]+"'>"+country[1].encode('utf-8')+"</option>"
+
+                    linha += "<td>Pais:  <input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"' value='pais' /> </td>"
+                    linha += "<td><select id='"+SEQ[cont]+"pais"+str(row)+"' name='"+SEQ[cont]+"|pais|"+str(row)+"'> "+ options +"</select></td>"
+                elif cond['tipo'] == 'age':
+                    selectsgrupos += "$('#"+SEQ[cont]+"condage"+str(row)+"').val('"+cond['c_age']+"'); "
+                    selectsgrupos += "$('#"+SEQ[cont]+"age"+str(row)+"').val('"+cond['val']+"');"
+
+                    linha += "<td>Age:  <input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"' value='age' /> </td>"
+                    linha += "<td><select id='"+SEQ[cont]+"condage"+str(row)+"' name='"+SEQ[cont]+"|condage|"+str(row)+"'> <option value='>'>></option><option value='<'><</option><option value='<='><=</option><option value='>='>>=</option></select> "
+                    linha += "<input id='"+SEQ[cont]+"age"+str(row)+"' name='"+SEQ[cont]+"|age|"+str(row)+"' type='number' min='0' max='100'/></td>"
+                elif cond['tipo'] == 'city':
+                    selectsgrupos += "$('#"+SEQ[cont]+"city"+str(row)+"').val('"+cond['val']+"'); "
+                    linha += "<td>City like:  <input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"' value='city' /></td>"
+                    linha += "<td><input id='"+SEQ[cont]+"city"+str(row)+"' name='"+SEQ[cont]+"|city|"+str(row)+"' type='text'/></td>"
+
+                cont += 1
+
+
+            if len(line) != 5: # tamanho maximo
+                linha += '<td>and</td>'
+                linha += "<td><input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"' value='criteria' /> <select id='"+SEQ[cont]+"col"+str(row)+"'> <option value='gender'>Gender </option> <option value='age'>Age</option><option value='escolaridade'>Escolaridade</option><option value='country'>Country</option><option value='city'>City</option> </select> </td>"
+                linha += "<td><input type='button' value='+' onclick='addFactor(this,"+SEQ[cont]+","+str(row)+");'/></td>"
+
+            if len(line) == 1:
+                linha += '<td></td>'
+                linha += '<td></td>'
+                linha += '<td></td>'
+                linha += '<td></td>'
+                linha += '<td></td>'
+                linha += '<td></td>'
+                linha += '<td></td>'
+                linha += '<td></td>'
+                linha += '<td></td>'
+            elif len(line) == 2:
+                linha += '<td></td>'
+                linha += '<td></td>'
+                linha += '<td></td>'
+                linha += '<td></td>'
+                linha += '<td></td>'
+                linha += '<td></td>'
+            elif len(line) == 3:
+                linha += '<td></td>'
+                linha += '<td></td>'
+                linha += '<td></td>'
+
+            linha += "<td><a onClick='upDateLen(this);'><i class='fa fa-trash'></i></a></td> </tr>"
+
+            print "\nLinha: ", linha
+
+            linhas.append(linha)
+            row += 1
+
+    except:
+        import sys
+        print "Unexpected error:", sys.exc_info()
+
 
     return render_to_response('experiment/estrategia.html', {
             'course_key_string': course_key_string,
@@ -276,9 +367,13 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
             'mensagemUniformChoice': mensagemUniformChoice,
             'mensagemCustom': mensagemCustom,
             'mensagemCrossOver': mensagemCrossOver,
+            'mensagemCluster':mensagemCluster,
             'exps': opcsSel,
             'periodos': strategy.periodos,
             "expRel": strategy.periodoRel,
+            'linhas': linhas,
+            'selectsgrupos': selectsgrupos,
+
         })
 
 def getSequencia(request, linha):
@@ -309,7 +404,6 @@ def getSequencia(request, linha):
             print 'Nao tem criterio em col: ', col, ' row: ', linha
 
     return criterios
-
 
 
 @require_GET
