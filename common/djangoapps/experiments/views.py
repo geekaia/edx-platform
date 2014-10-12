@@ -222,19 +222,24 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
             elif strategySel == 'cluster':
                 print "asdfasdf"
                 quantGroups = request.POST['quantG']
-                print "QuantGroups: ", quantGroups
-                grupos=[]
+                quantCad = GroupsCluster.objects.filter(experiment=exp)
 
-                print "Estrategia cluster: "
-
+                # Para cada grupo cadastra-se ou atualiza -1 e o codigo para cadastrar
                 for i in range(1, int(quantGroups)+1):
                     seq = getSequencia(request, i)
-                    grupos.append(seq)
+                    idG = request.POST['f'+str(i)]
 
-                print "Grupos Criados ", grupos
-
-                GruposJ = json.dumps(grupos)
-                strategy.clusterGroups = GruposJ
+                    if int(idG) == -1:
+                        g = GroupsCluster()
+                        g.experiment = exp
+                        strG = json.dumps(seq)
+                        g.grupos = strG
+                        g.save()
+                    else:
+                        g = GroupsCluster.objects.get(pk=int(idG))
+                        strG = json.dumps(seq)
+                        g.grupos = strG
+                        g.save()
 
                 mensagemCluster='Design CrossOver salvo com sucesso!!!'
 
@@ -271,25 +276,40 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
 
     try:
 
-        GruposJson = json.loads(exp.strategy.clusterGroups)
-        row = 1
+
+        #GruposJson = json.loads(exp.strategy.clusterGroups)
+        clustersG = GroupsCluster.objects.filter(experiment=exp)
+
+
+
         selectsgrupos = ''
-        for line in GruposJson:
-            linha="<tr id='"+str(row)+"'>"
+        for Line in clustersG:
+            linha="<tr id='"+str(Line.id)+"'>"
+            row = Line.id
             SEQ = ['0', '3', '6', '9', '12']
             cont = 0
             print "Line: ", line
+
+            try:
+                line = json.loads(Line.grupos)
+            except:
+                print "Other Group"
+                continue
+
             for cond in line:
+
                 if cont != 0:
                     linha += '<td>and</td>'
+                else:
+                    regId = "<input type='hidden' name=f'"+str(Line.id)+"' value='"+str(Line.id)+"' />"
 
                 if cond['tipo'] == 'sexo':
                     selectsgrupos += "$('#"+SEQ[cont]+"sexo"+str(row)+"').val('"+cond['val']+"'); "
-                    linha += "<td>Sexo: <input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"'  value='sexo' /></td>"
+                    linha += "<td>"+regId+"Sexo: <input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"'  value='sexo' /></td>"
                     linha += "<td><select id='"+SEQ[cont]+"sexo"+str(row)+"' name='"+SEQ[cont]+"|sexo|"+str(row)+"'><option value='m'>Masculino</option><option value='f'>Feminino</option></select> </td>"
                 elif cond['tipo'] == 'escolaridade':
                     selectsgrupos += "$('#"+SEQ[cont]+"escolaridade"+str(row)+"').val('"+cond['val']+"'); "
-                    linha +=  "<td>Escolaridade:  <input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"' value='escolaridade' /> </td>"
+                    linha +=  "<td>"+regId+"Escolaridade:  <input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"' value='escolaridade' /> </td>"
                     linha += "<td><select id='"+SEQ[cont]+"escolaridade"+str(row)+"' name='"+SEQ[cont]+"|escolaridade|"+str(row)+"'><option value='p'> Doctorate </option> <option value='m'> Master's or professional degree</option><option value='b'> Bachelor's degree</option> <option value='a'> Associate's degree</option><option value='hs'> Secondary/high school</option> <option value='jhs'> Junior secondary/junior high/middle school</option><option value='el'>Elementary/primary school</option> <option value='none'>None</option> <option value='other'>Other</option> </td>"
                 elif cond['tipo'] == 'pais':
                     selectsgrupos += "$('#"+SEQ[cont]+"pais"+str(row)+"').val('"+cond['val']+"'); "
@@ -299,18 +319,18 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
                     for country in COUNTRIES:
                         options += "<option value='"+country[0]+"'>"+country[1].encode('utf-8')+"</option>"
 
-                    linha += "<td>Pais:  <input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"' value='pais' /> </td>"
+                    linha += "<td>"+regId+"Pais: <input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"' value='pais' /> </td>"
                     linha += "<td><select id='"+SEQ[cont]+"pais"+str(row)+"' name='"+SEQ[cont]+"|pais|"+str(row)+"'> "+ options +"</select></td>"
                 elif cond['tipo'] == 'age':
                     selectsgrupos += "$('#"+SEQ[cont]+"condage"+str(row)+"').val('"+cond['c_age']+"'); "
                     selectsgrupos += "$('#"+SEQ[cont]+"age"+str(row)+"').val('"+cond['val']+"');"
 
-                    linha += "<td>Age:  <input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"' value='age' /> </td>"
+                    linha += "<td>"+regId+"Age:  <input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"' value='age' /> </td>"
                     linha += "<td><select id='"+SEQ[cont]+"condage"+str(row)+"' name='"+SEQ[cont]+"|condage|"+str(row)+"'> <option value='>'>></option><option value='<'><</option><option value='<='><=</option><option value='>='>>=</option></select> "
                     linha += "<input id='"+SEQ[cont]+"age"+str(row)+"' name='"+SEQ[cont]+"|age|"+str(row)+"' type='number' min='0' max='100'/></td>"
                 elif cond['tipo'] == 'city':
                     selectsgrupos += "$('#"+SEQ[cont]+"city"+str(row)+"').val('"+cond['val']+"'); "
-                    linha += "<td>City like:  <input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"' value='city' /></td>"
+                    linha += "<td>"+regId+"City like:  <input type='hidden' name='"+SEQ[cont]+"|"+str(row)+"' value='city' /></td>"
                     linha += "<td><input id='"+SEQ[cont]+"city"+str(row)+"' name='"+SEQ[cont]+"|city|"+str(row)+"' type='text'/></td>"
 
                 cont += 1
@@ -343,17 +363,15 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
                 linha += '<td></td>'
                 linha += '<td></td>'
 
-            linha += "<td><a onClick='upDateLen(this);'><i class='fa fa-trash'></i></a></td> </tr>"
+            linha += "<td><a onClick='upDateLen(this, "+Line.id+");'><i class='fa fa-trash'></i></a></td> </tr>"
 
             print "\nLinha: ", linha
 
             linhas.append(linha)
-            row += 1
 
     except:
         import sys
         print "Unexpected error:", sys.exc_info()
-
 
     return render_to_response('experiment/estrategia.html', {
             'course_key_string': course_key_string,
@@ -367,7 +385,7 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
             'mensagemUniformChoice': mensagemUniformChoice,
             'mensagemCustom': mensagemCustom,
             'mensagemCrossOver': mensagemCrossOver,
-            'mensagemCluster':mensagemCluster,
+            'mensagemCluster': mensagemCluster,
             'exps': opcsSel,
             'periodos': strategy.periodos,
             "expRel": strategy.periodoRel,

@@ -39,8 +39,6 @@ class StrategyRandomization(models.Model):
     periodos = models.CharField(max_length=1, null=True)
     periodoRel = models.ForeignKey("ExperimentDefinition", blank=True, null=True, on_delete=models.SET_NULL)
 
-    # cluster list json
-    clusterGroups = models.TextField(blank=True, null=True)
 
 class ExperimentDefinition(models.Model):
     """
@@ -84,6 +82,7 @@ class UserChoiceExperiment(models.Model):
     versionExp = models.ForeignKey(OpcoesExperiment)
     bloco = models.IntegerField(blank=True) # VOU REMOVER
     experimento = models.ForeignKey(ExperimentDefinition)
+    group = models.IntegerField(blank=True) # Needed for Cluster Randomization Codes: 0, 1, 2.... and -1 to groups that doesn't match
 
 
 class HistoricoQuestoes(models.Model):
@@ -105,3 +104,8 @@ class AnonyMousPost(models.Model):
     """
     user = models.IntegerField()
     commentid = models.CharField(max_length=50)
+
+class GroupsCluster(models.Model):
+    grupos = models.TextField(blank=True, null=True)
+    experiment = models.ForeignKey(ExperimentDefinition)
+    versao = models.ForeignKey("OpcoesExperiment", blank=True, null=True, on_delete=models.SET_NULL)

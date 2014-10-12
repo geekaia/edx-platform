@@ -246,6 +246,161 @@ def cadastraVersao(user,URL,urlExp):
             print "UrlChoice: ", urlchoice
             print "Versao: ", versao
 
+        elif strat.strategyType == 'cluster':
+            # Step 1 - randomiza os clusters entre os Arms disponíveis
+            groups = GroupsCluster.objects.filter(experiment=ExpPart)
+
+            listToRandomize=[]
+
+            # Verifica em que grupo o usuario pertence
+            # Pega todos os dados do usuario
+            profUser = UserProfile.objects.get(user=user)
+            age = date.today().year-profUser.year_of_birth
+            city = profUser.city
+            pais = profUser.country.code
+            escolaridade = profUser.level_of_education
+            sexo = profUser.gender
+
+
+
+            #############################################
+            #  Step 1 -  Procura pelo grupo do Usuario
+            #############################################
+
+            groupUser = -1 # isto quer dizer que o usuario nao tem nenhum trupo
+            for group in groups:
+                # Verifica criterio por criterio
+                matchCrits = False
+
+                try:
+                    Group = json.loads(group.grupos)
+                except:
+                    print "Other Group"
+                    continue
+
+                for criterio in Group:
+                    oneMatch = ['sexo', 'escolaridade', 'pais']
+
+                    if criterio['tipo'] in oneMatch:
+                        if eval("sexo=='"+criterio['val']+"'"):
+                            matchCrits = True
+                            continue
+                    elif criterio['tipo'] == 'escolaridade':
+                        if eval("escolaridade == '"+criterio['val']+"'"):
+                            matchCrits = True
+                            continue
+                    elif criterio['tipo'] == 'pais':
+                        if eval("pais == '"+criterio['val']+"'"):
+                            matchCrits = True
+                            continue
+                    elif criterio['tipo'] == 'age':
+                        if eval("age " + criterio['c_age'] + criterio['val']):
+                            matchCrits = True
+                            continue
+                    elif criterio['tipo'] == 'city':
+                        from unicodedata import normalize
+                        # Isto requer que o usuario se cadastre corretamente. Por exemplo, se for digitado SÕA PAULO ao invés de são paulo não
+                        # entrara no grupo
+                        cityUser = normalize('NFKD', city.decode('utf-8')).encode('ASCII','ignore').lower()
+                        cityCad = normalize('NFKD', criterio['tipo'].decode('utf-8')).encode('ASCII','ignore').lower()
+
+                        if cityCad in cityUser:
+                            matchCrits = True
+                            continue
+
+                    matchCrits = False
+                    break
+
+                # O usuario sera cadastrado no primeiro que preencher todos os requisitos
+                if matchCrits == True:
+                    groupUser = group.id
+                    break
+
+
+            # Verifica se o grupo que o aluno pertence ja esta em um Arm
+
+            #if groupUser == -1:
+            # #   print "Cadastra com campo null"
+               # lista = []
+             #
+            GroupsCluster.objects.filter(experimento=ExpPart)
+
+            hasCadG  = UserChoiceExperiment.objects.filter(group=groupUser, experimento=ExpPart)[:1]
+
+            # Tem Grupo -- Procura e cadastra de acordo com esta versao
+            if len(hasCadG) == 1:
+                for myG in hasCadG:
+                    versao = myG.versionExp.version
+
+                achei = True
+                conversao = True
+                deuerro = False
+            else:
+
+                # Procura todos os grupos não randomizados en(UserGroupsR) == 0
+                listToRandomize = []
+                cont = 0
+
+                while(cont < len(groups)):
+                    UserGroupsR = UserChoiceExperiment.objects.filter(group=cont, experimento=ExpPart)[:1]
+
+                    if len(UserGroupsR) == 0:
+                        listToRandomize.append(cont)
+
+                    cont += 1
+
+                armsDisponiveis = []
+
+                opcsArms = OpcoesExperiment.objects.filter(experimento=ExpPart)
+
+                for opcsArm in opcsArms:
+                    armsDisponiveis.append(opcsArm.version)
+
+                # Pega o último Arm randomizado
+                lastChoiceL = UserChoiceExperiment.objects.filter(experimento=ExpPart).order_by('-id')[:1]
+
+                atual = 0
+
+                if len(lastChoiceL) == 0:
+                    atual = 0
+                else:
+                    versaoLast = lastChoiceL[0].versionExp.version
+
+
+                lastIndex = armsDisponiveis.index(versaoLast)
+
+                if lastIndex == (len(armsDisponiveis)-1):
+                    atual = 0
+                else:
+                    atual = lastIndex + 1
+
+                versao = armsDisponiveis[atual]
+
+                grupo=-10
+
+                while grupo != groupUser:
+                    # Agora temos que randomizar os Grupos
+                    # Isto acontece somente uma vez por grupo
+                    if len(listToRandomize) > 0:
+                        class UrlExperimentWeighted(SimpleExperiment):
+                          def assign(self, params, userid):
+                            params.GRUPO = UniformChoice(choices=listToRandomize, unit=userid)
+                        try:
+                            grupo = int(UrlExperimentWeighted.get('GRUPO'))
+
+                        except:
+                            print 'Erro'
+
+                        if grupo != groupUser:
+                            # Primeiramente se o usuario tb pertence a este grupo
+                            listToRandomize.pop(listToRandomize.index(grupo))
+
+                    else:
+                        break
+
+                # Usuários que não se encaixarem em nenhum critério serão randomizados para um grupo que chamarei de Other.
+                # Os Arms serão cadastrados sequencialmente
+                # Por exemplo, para o Arm A executa-se uma randomização
 
 
         elif strat.strategyType == 'WeightedChoice':
@@ -376,7 +531,7 @@ def cadastraVersao(user,URL,urlExp):
 
                 print "Variáveis passadas: ", IDADE, ' ', CIDADE, ' ', PAIS, ' ', INSTRUCAO, ' ', SEXO
 
-                # Tem que pegar todos os dados do profile do usuário
+                # Tem que pegar todos os dados do profile do usuário a cidade nao funciona muito bem NEED more work
                 exp = ExpPlanoutScript(userid=user.id,  CHOICES=CHOICESG, IDADE=IDADE,  CIDADE=CIDADE, PAIS=PAIS, INSTRUCAO=INSTRUCAO,  SEXO=SEXO)
                 conversao = False
                 deuerro = False

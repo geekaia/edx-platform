@@ -197,6 +197,8 @@
         <font color="blue">${mensagemCluster}</font>
 
         <br />
+        <input type="hidden" name="RemoveIDS" value="" />
+
         <input type="submit" value="Salvar" class="btn btn-primary" />
     </form>
 
@@ -212,17 +214,24 @@
             ${selectsgrupos}
         });
        //var btnRemove ="       <input type='button' value='Remover' onClick='$(this).parent().parent().remove();'>";
-       var btnRemove ="<a onClick='upDateLen(this);'><i class='fa fa-trash'></i></a>";
+
 
        var fields = "<select> <option value='gender'>Gender </option> <option value='age'>Age</option><option value='escolaridade'>Escolaridade</option><option value='country'>Country</option><option value='city'>City</option> </select>";
 
        var campos = "<select> <option value='cidade'>Cidade</option><option value='escolaridade'>Escolaridade</option><option value='pais'>País</option></select>"
 
 
-        function upDateLen(el)
+
+
+        function upDateLen(el, id)
         {
            var x = document.getElementById('groups').rows.length - 1;
            $('#quantG').val(x-1);
+
+           if(id != '-1') {
+                $('#RemoveIDS').val($('#RemoveIDS').val()+'|'+$('#f'+id).val());
+           }
+
            $(el).parent().parent().remove();
         }
        function addFactor(el, col, row)
@@ -276,40 +285,69 @@
 
        function addCriteria(col, row, cell1, cell2)
        {
+
           cell1.innerHTML = "<input type='hidden' name='"+col+"|"+row+"' value='criteria' /> <select id='"+col+"col"+row+"'> <option value='gender'>Gender </option> <option value='age'>Age</option><option value='escolaridade'>Escolaridade</option><option value='country'>Country</option><option value='city'>City</option> </select>";
           cell2.innerHTML = "<input type='button' value='+' onclick='addFactor(this,"+col+","+row+");' />";
        }
 
 
+
        function addAge(col, row, cell1, cell2)
        {
-          cell1.innerHTML = "Age:  <input type='hidden' name='"+col+"|"+row+"' value='age' />";
+          var string = '';
+
+          if ( col == 0){
+            string = "<input type='hidden' id='f"+row+"' name='"+row+"' value='-1' />";
+          }
+          cell1.innerHTML = "Age:  <input type='hidden' name='"+col+"|"+row+"' value='age' />"+string;
           var condage = "<select id='"+col+"condage"+row+"' name='"+col+"|condage|"+row+"'> <option value='>'>></option><option value='<'><</option><option value='<='><=</option><option value='>='>>=</option></select>";
           cell2.innerHTML = condage + "<input id='"+col+"age"+row+"' name='"+col+"|age|"+row+"' type='number' min='0' max='100'/>";
        }
 
        function addSexo(col, row, cell1, cell2)
        {
-            cell1.innerHTML = "Sexo: <input type='hidden' name='"+col+"|"+row+"'  value='sexo' />";
+           var string = '';
+
+          if ( col == 0){
+            string = "<input type='hidden' id='f"+row+"'  name='"+row+"' value='-1' />";
+          }
+
+            cell1.innerHTML = "Sexo: <input type='hidden' name='"+col+"|"+row+"'  value='sexo' />"+string;
             cell2.innerHTML = "<select id='"+col+"sexo"+row+"' name='"+col+"|sexo|"+row+"'><option value='m'>Masculino</option><option value='f'>Feminino</option></select>";
        }
 
        function addCountry(col, row, cell1, cell2)
        {
-            cell1.innerHTML = "Pais:  <input type='hidden' name='"+col+"|"+row+"' value='pais' />";
+            var string = '';
+
+            if ( col == 0){
+                string = "<input type='hidden' id='f"+row+"'  name='"+row+"' value='-1' />";
+            }
+            cell1.innerHTML = "Pais:  <input type='hidden' name='"+col+"|"+row+"' value='pais' />"+string;
             cell2.innerHTML = "<select id='"+col+"pais"+row+"' name='"+col+"|pais|"+row+"'> "+ options +"</select>";
        }
 
        function addCity(col, row, cell1, cell2)
        {
-            cell1.innerHTML = "City like:  <input type='hidden' name='"+col+"|"+row+"' value='city' />";
+            var string = '';
+
+            if ( col == 0){
+                string = "<input type='hidden' id='f"+row+"'  name='"+row+"' value='-1' />";
+            }
+
+            cell1.innerHTML = "City like:  <input type='hidden' name='"+col+"|"+row+"' value='city' />" + string;
             cell2.innerHTML = "<input id='"+col+"city"+row+"' name='"+col+"|city|"+row+"' type='text'/>";
 
        }
 
        function addEscolaridade(col, row, cell1, cell2)
        {
-          cell1.innerHTML = "Escolaridade:  <input type='hidden' name='"+col+"|"+row+"' value='escolaridade' />";
+          var string = '';
+
+          if ( col == 0 ){
+            string = "<input type='hidden' id='f"+row+"'  name='"+row+"' value='-1' />";
+          }
+          cell1.innerHTML = "Escolaridade:  <input type='hidden' name='"+col+"|"+row+"' value='escolaridade' />"+string;
           cell2.innerHTML = "<select id='"+col+"escolaridade"+row+"' name='"+col+"|escolaridade|"+row+"'><option value='p'> Doctorate </option> <option value='m'> Master's or professional degree</option><option value='b'> Bachelor's degree</option> <option value='a'> Associate's degree</option><option value='hs'> Secondary/high school</option> <option value='jhs'> Junior secondary/junior high/middle school</option><option value='el'>Elementary/primary school</option> <option value='none'>None</option> <option value='other'>Other</option>";
        }
 
@@ -337,10 +375,9 @@
            var cell15 = row.insertCell(14);
 
            addCriteria(0, x, cell1, cell2);
-
            $("#quantG").val(x);
 
-           cell15.innerHTML = btnRemove;
+           cell15.innerHTML = "<a onClick='upDateLen(this, "+x+");'><i class='fa fa-trash'></i></a>";
        }
    </script>
 </div>
