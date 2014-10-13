@@ -227,7 +227,7 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
                 # Para cada grupo cadastra-se ou atualiza -1 e o codigo para cadastrar
                 for i in range(1, int(quantGroups)+1):
                     seq = getSequencia(request, i)
-                    idG = request.POST['f'+str(i)]
+                    idG = request.POST[str(i)]
 
                     if int(idG) == -1:
                         g = GroupsCluster()
@@ -241,7 +241,23 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
                         g.grupos = strG
                         g.save()
 
-                mensagemCluster='Design CrossOver salvo com sucesso!!!'
+
+                toRemove = request.POST['RemoveIDS']
+                print "Toremove ", toRemove
+
+                idsR = toRemove.split("|")
+
+                for idr in idsR:
+                    try:
+                        if int(idr) != -1:
+                            print "Idr: ", idr
+                            g = GroupsCluster.objects.get(pk=int(idr))
+                            g.delete()
+                    except:
+                        print 'Err rem', idr
+
+
+                mensagemCluster='Design Cluster saved with success!!!'
 
                 strategy.save()
 
@@ -271,27 +287,25 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
         cont += 1
 
     linhas = []
-    print "ClusterGroups: ", exp.strategy.clusterGroups
-
 
     try:
 
 
         #GruposJson = json.loads(exp.strategy.clusterGroups)
         clustersG = GroupsCluster.objects.filter(experiment=exp)
-
-
+        print "Quant: ", len(clustersG)
 
         selectsgrupos = ''
+        row = 1
         for Line in clustersG:
-            linha="<tr id='"+str(Line.id)+"'>"
-            row = Line.id
+            print "Cheguei aqui: "
+            linha="<tr id='"+str(row)+"'>"
             SEQ = ['0', '3', '6', '9', '12']
             cont = 0
-            print "Line: ", line
 
             try:
                 line = json.loads(Line.grupos)
+                print "line: ", line
             except:
                 print "Other Group"
                 continue
@@ -301,7 +315,7 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
                 if cont != 0:
                     linha += '<td>and</td>'
                 else:
-                    regId = "<input type='hidden' name=f'"+str(Line.id)+"' value='"+str(Line.id)+"' />"
+                    regId = "<input type='hidden' name='"+str(row)+"' id='f"+str(Line.id)+"' value='"+str(Line.id)+"' />"
 
                 if cond['tipo'] == 'sexo':
                     selectsgrupos += "$('#"+SEQ[cont]+"sexo"+str(row)+"').val('"+cond['val']+"'); "
@@ -363,7 +377,9 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
                 linha += '<td></td>'
                 linha += '<td></td>'
 
-            linha += "<td><a onClick='upDateLen(this, "+Line.id+");'><i class='fa fa-trash'></i></a></td> </tr>"
+            linha += "<td><a onClick='upDateLen(this, "+str(Line.id)+");'><i class='fa fa-trash'></i></a></td> </tr>"
+
+            row += 1
 
             print "\nLinha: ", linha
 

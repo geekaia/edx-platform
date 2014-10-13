@@ -82,7 +82,6 @@ class UserChoiceExperiment(models.Model):
     versionExp = models.ForeignKey(OpcoesExperiment)
     bloco = models.IntegerField(blank=True) # VOU REMOVER
     experimento = models.ForeignKey(ExperimentDefinition)
-    group = models.IntegerField(blank=True) # Needed for Cluster Randomization Codes: 0, 1, 2.... and -1 to groups that doesn't match
 
 
 class HistoricoQuestoes(models.Model):

@@ -261,16 +261,17 @@ def cadastraVersao(user,URL,urlExp):
             escolaridade = profUser.level_of_education
             sexo = profUser.gender
 
-
-
             #############################################
             #  Step 1 -  Procura pelo grupo do Usuario
             #############################################
-
             groupUser = -1 # isto quer dizer que o usuario nao tem nenhum trupo
             for group in groups:
                 # Verifica criterio por criterio
                 matchCrits = False
+
+                # Todos os grupos que nao foram randomizados
+                if group.versao is None:
+                    listToRandomize.append(group.id)
 
                 try:
                     Group = json.loads(group.grupos)
@@ -278,26 +279,33 @@ def cadastraVersao(user,URL,urlExp):
                     print "Other Group"
                     continue
 
+                print "Group: ", Group
+
                 for criterio in Group:
                     oneMatch = ['sexo', 'escolaridade', 'pais']
 
                     if criterio['tipo'] in oneMatch:
                         if eval("sexo=='"+criterio['val']+"'"):
+                            print "match sexo ", criterio['val']
                             matchCrits = True
                             continue
                     elif criterio['tipo'] == 'escolaridade':
                         if eval("escolaridade == '"+criterio['val']+"'"):
+                            print "match escolaridade", criterio['val']
                             matchCrits = True
                             continue
                     elif criterio['tipo'] == 'pais':
                         if eval("pais == '"+criterio['val']+"'"):
+                            print "match pais", criterio['val']
                             matchCrits = True
                             continue
                     elif criterio['tipo'] == 'age':
                         if eval("age " + criterio['c_age'] + criterio['val']):
+                            print "match age", criterio['val'], " age: ", age
                             matchCrits = True
                             continue
                     elif criterio['tipo'] == 'city':
+                        print "match city", criterio['val']
                         from unicodedata import normalize
                         # Isto requer que o usuario se cadastre corretamente. Por exemplo, se for digitado SÕA PAULO ao invés de são paulo não
                         # entrara no grupo
@@ -311,97 +319,40 @@ def cadastraVersao(user,URL,urlExp):
                     matchCrits = False
                     break
 
+                print "MatchCrits para entrar no grupo: ", criterio, ' group ', group.id, " matchCrits ", matchCrits
                 # O usuario sera cadastrado no primeiro que preencher todos os requisitos
                 if matchCrits == True:
                     groupUser = group.id
                     break
 
+                print "Groupuser: ", groupUser
 
-            # Verifica se o grupo que o aluno pertence ja esta em um Arm
 
-            #if groupUser == -1:
-            # #   print "Cadastra com campo null"
-               # lista = []
-             #
-            GroupsCluster.objects.filter(experimento=ExpPart)
+            # Pesquisa para ver se o grupo do aluno já teve randomização
+            if groupUser != -1:
+                groupMatch = GroupsCluster.objects.get(pk=groupUser)
 
-            hasCadG  = UserChoiceExperiment.objects.filter(group=groupUser, experimento=ExpPart)[:1]
+                print 'g match searchi', groupMatch.versao != None, "Val"
 
-            # Tem Grupo -- Procura e cadastra de acordo com esta versao
-            if len(hasCadG) == 1:
-                for myG in hasCadG:
-                    versao = myG.versionExp.version
+                if groupMatch.versao != None:
+                    print 'G  match is none'
+                    versao = groupMatch.versao.version
+                    achei = True
+                    conversao = True
+                    deuerro = False
+                else:
+                    print "CadastraGrupo -- cadastra normal com randomização dos grupos "
+                    versao, achei, conversao, deuerro = cadGrupo(groupUser, groups, ExpPart, user.id)
+                    URLChoice = options[versao].sectionExp_url
 
-                achei = True
-                conversao = True
-                deuerro = False
+                    print "Versão: ", versao, "Url choice: ", URLChoice, " CONVERSAO: ", conversao, " Deurro: ", deuerro
+                    # Versão:  A Url choice:  427007a51f9c475ca12861aa898f2894  CONVERSAO:  True  Deurro:  False
+
             else:
-
-                # Procura todos os grupos não randomizados en(UserGroupsR) == 0
-                listToRandomize = []
-                cont = 0
-
-                while(cont < len(groups)):
-                    UserGroupsR = UserChoiceExperiment.objects.filter(group=cont, experimento=ExpPart)[:1]
-
-                    if len(UserGroupsR) == 0:
-                        listToRandomize.append(cont)
-
-                    cont += 1
-
-                armsDisponiveis = []
-
-                opcsArms = OpcoesExperiment.objects.filter(experimento=ExpPart)
-
-                for opcsArm in opcsArms:
-                    armsDisponiveis.append(opcsArm.version)
-
-                # Pega o último Arm randomizado
-                lastChoiceL = UserChoiceExperiment.objects.filter(experimento=ExpPart).order_by('-id')[:1]
-
-                atual = 0
-
-                if len(lastChoiceL) == 0:
-                    atual = 0
-                else:
-                    versaoLast = lastChoiceL[0].versionExp.version
-
-
-                lastIndex = armsDisponiveis.index(versaoLast)
-
-                if lastIndex == (len(armsDisponiveis)-1):
-                    atual = 0
-                else:
-                    atual = lastIndex + 1
-
-                versao = armsDisponiveis[atual]
-
-                grupo=-10
-
-                while grupo != groupUser:
-                    # Agora temos que randomizar os Grupos
-                    # Isto acontece somente uma vez por grupo
-                    if len(listToRandomize) > 0:
-                        class UrlExperimentWeighted(SimpleExperiment):
-                          def assign(self, params, userid):
-                            params.GRUPO = UniformChoice(choices=listToRandomize, unit=userid)
-                        try:
-                            grupo = int(UrlExperimentWeighted.get('GRUPO'))
-
-                        except:
-                            print 'Erro'
-
-                        if grupo != groupUser:
-                            # Primeiramente se o usuario tb pertence a este grupo
-                            listToRandomize.pop(listToRandomize.index(grupo))
-
-                    else:
-                        break
-
-                # Usuários que não se encaixarem em nenhum critério serão randomizados para um grupo que chamarei de Other.
-                # Os Arms serão cadastrados sequencialmente
-                # Por exemplo, para o Arm A executa-se uma randomização
-
+                # Cadastra Other - quer dizer que o aluno nao entrou em nenhum grupo
+                versao, achei, conversao, deuerro = cadGrupo(groupUser, groups, ExpPart, user.id)
+                URLChoice = options[versao].sectionExp_url
+                print "Versão: ", versao, "Url choice: ", URLChoice, " CONVERSAO: ", conversao, " Deurro: ", deuerro
 
         elif strat.strategyType == 'WeightedChoice':
             percents = []
@@ -541,40 +492,41 @@ def cadastraVersao(user,URL,urlExp):
                 deuerro = True
                 print "Erro nesta randomização"
 
-        # adicionei isso para o fatorial design
-        try:
-            f1 = exp.get('fat1')
-            f2 = exp.get('fat2')
+            # adicionei isso para o fatorial design com PlanOut script
+            try:
+                f1 = exp.get('fat1')
+                f2 = exp.get('fat2')
 
-            fat1=int(f1)
-            fat2=int(f2)
+                fat1=int(f1)
+                fat2=int(f2)
 
-            if fat1==1 and fat2==1:
-                ver=0
-            elif fat1==2 and fat2==2:
-                ver=1
-            elif fat1==1 and fat2==2:
-                ver=2
-            elif fat1==2 and fat2==1:
-                ver=3
+                if fat1==1 and fat2==1:
+                    ver=0
+                elif fat1==2 and fat2==2:
+                    ver=1
+                elif fat1==1 and fat2==2:
+                    ver=2
+                elif fat1==2 and fat2==1:
+                    ver=3
 
-            # Internamente ainda funciona com versoes A, B, C e D
-            if ver == 0:
-                versao ='A'
-            elif ver == 1:
-                versao = 'B'
-            elif ver == 2:
-                versao = 'C'
-            else:
-                versao = 'D'
+                # Internamente ainda funciona com versoes A, B, C e D
+                if ver == 0:
+                    versao ='A'
+                elif ver == 1:
+                    versao = 'B'
+                elif ver == 2:
+                    versao = 'C'
+                else:
+                    versao = 'D'
 
-            URLChoice = CHOICESG[ver]
+                URLChoice = CHOICESG[ver]
 
-            achei = True
-            conversao = True
-            deuerro = False
-        except:
-            print "Erro no Fatorial:", sys.exc_info()[0]
+                achei = True
+                conversao = True
+                deuerro = False
+            except:
+                print "Erro no Fatorial:"
+
 
 
         try:
@@ -597,7 +549,11 @@ def cadastraVersao(user,URL,urlExp):
             except:
                 print "Unexpected error3:", sys.exc_info()[0]
 
-        num = CHOICES.index(URLChoice)
+        num = -1
+
+        if conversao == False:
+            num = CHOICES.index(URLChoice)
+
         if num == 0 and conversao == False :
             versao = 'A' # Removi o balanceamento de 50 50
 
@@ -605,15 +561,16 @@ def cadastraVersao(user,URL,urlExp):
             versao = 'B'
         elif conversao == False:
             versao = 'C'
-
+        print "Here2"
 
         # Um usuário que escolhe uma versão
         # estará nela para sempre
         # e todo o sempre
+
         try:
 
             if curso:
-                if expc.strategy.strategyType != "crossover":
+                if ExpPart.strategy.strategyType != "crossover" and ExpPart.strategy.strategyType != "cluster":
                     expsCurso = ExperimentDefinition.objects.filter(course=curso)
 
                     print "tamanho: ", len(expsCurso)
@@ -640,8 +597,6 @@ def cadastraVersao(user,URL,urlExp):
         userVersion.versionExp = options[versao]
         userVersion.experimento = urlExp.experimento
 
-        # Verifica se nao ha nenhuma entrada deste experimento
-
         verCads = UserChoiceExperiment.objects.filter(experimento=urlExp.experimento, userStudent=user)
 
         if len(verCads) > 0:
@@ -657,6 +612,8 @@ def cadastraVersao(user,URL,urlExp):
         else:
             userVersion.save()
 
+
+
         if userVersion.versionExp.sectionExp_url == URL:
             print "Quarto"
             return True
@@ -664,9 +621,116 @@ def cadastraVersao(user,URL,urlExp):
             print "Quinto"
             return False
     except:
-        print "Sexto"
+        print "Sexto", sys.exc_info()[0]
         return False
 
+
+
+def cadGrupo(groupUser, groups, exp, userid):
+    # procura quem tem menos arms alocados
+    arms = {'A':0, 'B':0, 'C':0, 'D':0, 'E':0 }
+
+    # grupo -1 deste experimento e o que nao atendeu a nenhum criterio
+    grupoMenos1 = None
+
+    listToRandomize = []
+
+#    for arm in arms:
+    # Conta quantos As e Bs
+    for g in groups:
+        if g.versao == None:
+            listToRandomize.append(g.id)
+
+        if g.versao != None and g.grupos != None:
+            arms[g.versao.version] += 1 # Conta somente os que ja foram randomizados
+        elif g.grupos == None:
+            grupoMenos1 = g
+
+
+    print "Arms: ", arms, " listtorandomize: ", listToRandomize
+
+
+    # Sort Arms
+    sortList = sorted(arms.items(), key=lambda x: (x[1], x[0]))
+
+    # Sempre pega o Arm que tem menos usuarios
+    armRandomize = sortList[0]
+    versao = armRandomize[0]
+
+    print "Sorted list: arm  ", armRandomize
+    print "Sorted list: ", sortList
+
+    # Se o usuario tiver -1 iremos cadastrá-lo com no Arm com menos grupos
+    if groupUser == -1:
+        achei = True
+        conversao = True
+        deuerro = False
+
+        if grupoMenos1 != None:
+            if grupoMenos1.versao != None:
+                # So cadastra um arm de acordo com a variavel Versao
+                opc = OpcoesExperiment.objects.get(experimento=exp, version=versao)
+                grupoMenos1.versao = opc
+                grupoMenos1.save()
+        else:
+            opc = OpcoesExperiment.objects.get(experimento=exp, version=versao)
+            g = GroupsCluster()
+            g.experiment = exp
+            g.versao = opc
+            g.save()
+
+        return versao, achei, conversao, deuerro
+    # Precisa cadastrar o Grupo != -1
+    else:
+
+        MyGroup = GroupsCluster.objects.get(pk=groupUser)
+
+        grupo = -10
+
+        # Randomiza os grupos
+        while MyGroup.id != grupo:
+            class UrlExperimentCluster(SimpleExperiment):
+                def assign(self, params, userid):
+                    params.GRUPO = UniformChoice(choices=listToRandomize, unit=userid)
+
+            try:
+                randExp = UrlExperimentCluster(userid=userid)
+                grupo = int(randExp.get('GRUPO'))
+
+                print "Userid: ", userid, " grupo: ", grupo
+
+                # Cadastra o grupo com a versao
+                g = GroupsCluster.objects.get(pk=grupo)
+                print "ok1 ", exp.id, " Versao: ", versao
+                opc = OpcoesExperiment.objects.get(experimento=exp, version=versao)
+                print "ok2"
+                g.versao = opc
+                g.save()
+                print "Versao: ", versao
+            except:
+                print 'Erro'
+
+            if grupo != groupUser:
+                # Primeiramente se o usuario tb pertence a este grupo
+                listToRandomize.pop(listToRandomize.index(grupo))
+
+                # Aumenta a quantidade de grupos nesta versao
+                arms[versao] += 1
+                sortList = sorted(arms.items(), key=lambda x: (x[1], x[0]))
+                # Sempre pega o Arm que tem menos usuarios
+                armRandomize = sortList[0]
+                versao = armRandomize[0]
+            else:
+                achei = True
+                conversao = True
+                deuerro = False
+
+        print "Versao: ", versao
+        print "Achei: ", achei
+        print "Conversao: ", conversao
+        print "Deuerro: ", deuerro
+
+        return versao, achei, conversao, deuerro
 
 
 def VerABprint(URL, user):

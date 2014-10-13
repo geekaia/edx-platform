@@ -197,7 +197,7 @@
         <font color="blue">${mensagemCluster}</font>
 
         <br />
-        <input type="hidden" name="RemoveIDS" value="" />
+        <input type="hidden" name="RemoveIDS" id="RemoveIDS" value="" />
 
         <input type="submit" value="Salvar" class="btn btn-primary" />
     </form>
@@ -227,9 +227,11 @@
         {
            var x = document.getElementById('groups').rows.length - 1;
            $('#quantG').val(x-1);
+            //alert('id '+ id);
 
-           if(id != '-1') {
+           if(id != -1) {
                 $('#RemoveIDS').val($('#RemoveIDS').val()+'|'+$('#f'+id).val());
+              // alert('id '+ $('#RemoveIDS').val()+'|'+$('#f'+id).val());
            }
 
            $(el).parent().parent().remove();
