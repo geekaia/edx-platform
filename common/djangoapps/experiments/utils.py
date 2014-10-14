@@ -255,7 +255,7 @@ def cadastraVersao(user,URL,urlExp):
             # Verifica em que grupo o usuario pertence
             # Pega todos os dados do usuario
             profUser = UserProfile.objects.get(user=user)
-            age = date.today().year-profUser.year_of_birth
+            age = date.today().year - profUser.year_of_birth
             city = profUser.city
             pais = profUser.country.code
             escolaridade = profUser.level_of_education
@@ -282,14 +282,15 @@ def cadastraVersao(user,URL,urlExp):
                 print "Group: ", Group
 
                 for criterio in Group:
-                    oneMatch = ['sexo', 'escolaridade', 'pais']
+                    print "Criterio: ", criterio
 
-                    if criterio['tipo'] in oneMatch:
+                    if criterio['tipo'] == 'sexo':
                         if eval("sexo=='"+criterio['val']+"'"):
                             print "match sexo ", criterio['val']
                             matchCrits = True
                             continue
                     elif criterio['tipo'] == 'escolaridade':
+                        print "escolaridade == '"+criterio['val']+"'"
                         if eval("escolaridade == '"+criterio['val']+"'"):
                             print "match escolaridade", criterio['val']
                             matchCrits = True
@@ -309,8 +310,8 @@ def cadastraVersao(user,URL,urlExp):
                         from unicodedata import normalize
                         # Isto requer que o usuario se cadastre corretamente. Por exemplo, se for digitado SÕA PAULO ao invés de são paulo não
                         # entrara no grupo
-                        cityUser = normalize('NFKD', city.decode('utf-8')).encode('ASCII','ignore').lower()
-                        cityCad = normalize('NFKD', criterio['tipo'].decode('utf-8')).encode('ASCII','ignore').lower()
+                        cityUser = normalize('NFKD', city).encode('ASCII','ignore').lower()
+                        cityCad = normalize('NFKD', criterio['val']).encode('ASCII','ignore').lower()
 
                         if cityCad in cityUser:
                             matchCrits = True
@@ -340,6 +341,7 @@ def cadastraVersao(user,URL,urlExp):
                     achei = True
                     conversao = True
                     deuerro = False
+                    URLChoice = options[versao].sectionExp_url
                 else:
                     print "CadastraGrupo -- cadastra normal com randomização dos grupos "
                     versao, achei, conversao, deuerro = cadGrupo(groupUser, groups, ExpPart, user.id)
@@ -627,21 +629,26 @@ def cadastraVersao(user,URL,urlExp):
 
 
 def cadGrupo(groupUser, groups, exp, userid):
-    # procura quem tem menos arms alocados
-    arms = {'A':0, 'B':0, 'C':0, 'D':0, 'E':0 }
+
+    # Load arms to find the Arm with Less Groups
+    opcs = OpcoesExperiment.objects.filter(experimento=exp)
+    arms = {}
+    for opc in opcs:
+        arms[opc.version] = 0
+
 
     # grupo -1 deste experimento e o que nao atendeu a nenhum criterio
     grupoMenos1 = None
-
     listToRandomize = []
 
 #    for arm in arms:
     # Conta quantos As e Bs
     for g in groups:
-        if g.versao == None:
+        # Somente quem nao tem grupo que ira ficar de fora da randomização
+        if g.grupos != None:
             listToRandomize.append(g.id)
 
-        if g.versao != None and g.grupos != None:
+        if g.versao != None :
             arms[g.versao.version] += 1 # Conta somente os que ja foram randomizados
         elif g.grupos == None:
             grupoMenos1 = g

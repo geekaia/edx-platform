@@ -116,3 +116,16 @@
 {"inputs": {"userid": 26}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 10}, "time": 1413174927, "salt": "UrlExperimentCluster", "event": "exposure"}
 {"inputs": {"userid": 26}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 10}, "time": 1413175125, "salt": "UrlExperimentCluster", "event": "exposure"}
 {"inputs": {"userid": 26}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 10}, "time": 1413175627, "salt": "UrlExperimentCluster", "event": "exposure"}
+{"inputs": {"userid": 5}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 14}, "time": 1413244305, "salt": "UrlExperimentCluster", "event": "exposure"}
+{"inputs": {"userid": 5}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 14}, "time": 1413256705, "salt": "UrlExperimentCluster", "event": "exposure"}
+{"inputs": {"userid": 10}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 18}, "time": 1413259290, "salt": "UrlExperimentCluster", "event": "exposure"}
+{"inputs": {"userid": 10}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 18}, "time": 1413261146, "salt": "UrlExperimentCluster", "event": "exposure"}
+{"inputs": {"userid": 17}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 14}, "time": 1413294406, "salt": "UrlExperimentCluster", "event": "exposure"}
+{"inputs": {"userid": 17}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 18}, "time": 1413294406, "salt": "UrlExperimentCluster", "event": "exposure"}
+{"inputs": {"userid": 17}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 20}, "time": 1413294406, "salt": "UrlExperimentCluster", "event": "exposure"}
+{"inputs": {"userid": 17}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 14}, "time": 1413294665, "salt": "UrlExperimentCluster", "event": "exposure"}
+{"inputs": {"userid": 17}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 18}, "time": 1413294666, "salt": "UrlExperimentCluster", "event": "exposure"}
+{"inputs": {"userid": 17}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 21}, "time": 1413294666, "salt": "UrlExperimentCluster", "event": "exposure"}
+{"inputs": {"userid": 17}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 14}, "time": 1413294884, "salt": "UrlExperimentCluster", "event": "exposure"}
+{"inputs": {"userid": 17}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 18}, "time": 1413294884, "salt": "UrlExperimentCluster", "event": "exposure"}
+{"inputs": {"userid": 17}, "name": "UrlExperimentCluster", "checksum": "fa2e76eb", "params": {"GRUPO": 21}, "time": 1413294884, "salt": "UrlExperimentCluster", "event": "exposure"}
