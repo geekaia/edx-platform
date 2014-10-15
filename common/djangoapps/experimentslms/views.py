@@ -82,11 +82,83 @@ def DesignAsCSV(request, course_id,  idExp):
         # Pega os experimento
         exp = ExperimentDefinition.objects.get(id=int(idExp))
 
+
+        def geTUsers(experimento):
+            try:
+
+                # Aqui será mostrado de acordo com a primeira lista
+                if experimento.strategy.strategyType == 'crossover':
+                    MyList = []
+
+                    anterior = UserChoiceExperiment.objects.filter(experimento=experimento.strategy.periodoRel)
+
+                    for ch in anterior:
+                        try:
+                            ch = UserChoiceExperiment.objects.get(experimento=experimento, userStudent=ch.userStudent)
+                            MyList.append(ch)
+                        except:
+                            print 'User nao Entrou'
+
+                    return MyList
+
+                # Modifica a ordem para facilitar a analise comparativa entre os experimentos
+                listAnable = ["UniformChoice",  "WeightedChoice", "planOut", "customdesign", "fatorial", "cluster"]
+
+                if experimento.strategy.strategyType in listAnable:
+                    MyList = []
+
+                    firstExp = ExperimentDefinition.objects.filter(course=experimento.course)[:1]
+
+
+                    # Get Sequence
+                    anterior = UserChoiceExperiment.objects.filter(experimento=firstExp[0])
+                    for ch in anterior:
+                        try:
+                            ch = UserChoiceExperiment.objects.get(experimento=experimento, userStudent=ch.userStudent)
+                            MyList.append(ch)
+                        except:
+                            print 'User nao Entrou'
+
+                    return MyList
+
+                return UserChoiceExperiment.objects.filter(experimento=experimento)
+
+            except:
+                return UserChoiceExperiment.objects.filter(experimento=experimento)
+
+
+
+
         # Pega todos os usuarios do experimento
-        versionUsers = UserChoiceExperiment.objects.filter(experimento=exp)
+        versionUsers = geTUsers(exp)
 
         rows = []
         MaxQuestoes = 0
+
+        groupsDesign = {}
+
+        if exp.strategy.strategyType == 'cluster':
+            groups = GroupsCluster.objects.filter(experiment=exp)
+            cont=0
+            for g in groups:
+                if g.versao != None:
+                    groupsDesign[g.versao.id] = cont
+                    cont += 1
+
+        # Get Periodos
+        Periodos = {}
+        if exp.strategy.strategyType == 'crossover':
+            periodos = StrategyRandomization.objects.filter(periodoRel=exp.strategy.periodoRel)
+            cont = 0
+
+            # Aqui devemos ter uma ordem específica o primeiro experimento tem que ser o que
+            for periodo in periodos:
+                Periodos[periodo.id] = cont
+
+
+
+
+
 
         for ChoiceUser in versionUsers:
 
@@ -118,6 +190,15 @@ def DesignAsCSV(request, course_id,  idExp):
                 # Versions of Arms
                 versions = {'A': 0, 'B': 1, 'C': 2, 'D' : 3}
                 row['arm'] = versions[ChoiceUser.versionExp.version]
+
+                # Aqui Adicionamos um campo extra para fatorial, cluster design
+                if exp.strategy.strategyType == 'fatorial':
+                    row['Combination'] = versions[ChoiceUser.versionExp.version]
+                elif exp.strategy.strategyType == 'cluster':
+                    row['group'] = groupsDesign[ChoiceUser.versionExp.id]
+                elif exp.strategy.strategyType == 'crossover':
+                    row['periodo'] = Periodos[exp.id]
+
             except:
                 print "Exceção ao pegar o profile do ChoiceUser"
 
@@ -160,6 +241,13 @@ def DesignAsCSV(request, course_id,  idExp):
         listCols.append('block')
         listCols.append('ARM')
 
+        if exp.strategy.strategyType == 'fatorial':
+            listCols.append('Combination')
+        elif exp.strategy.strategyType == 'cluster':
+            listCols.append('group')
+        elif exp.strategy.strategyType == 'crossover':
+            listCols.append('periodo')
+
         # Questoes -- A quantidade sera o somatorio de todas as questoes das sections
         # Aqui so mostrara o score obtido nas questoes
 
@@ -182,7 +270,15 @@ def DesignAsCSV(request, course_id,  idExp):
             line.append(row['level_of_education'])
             line.append(row['bloco'])
             line.append(row['arm'])
+            # Tem que carregar o Arm
 
+            # Aqui Adicionamos um campo extra para fatorial, cluster design e crossover
+            if exp.strategy.strategyType == 'fatorial':
+                line.append(row['Combination'])
+            elif exp.strategy.strategyType == 'cluster':
+                line.append(row['group'])
+            elif exp.strategy.strategyType == 'crossover':
+                line.append(row['periodo'])
 
             # Para dar certo é necessário que em todos arms do experimento tenham a mesma quantidade de exercícios.
             # Caso não haja a mesma quantidade será necessário

@@ -241,7 +241,6 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
                         g.grupos = strG
                         g.save()
 
-
                 toRemove = request.POST['RemoveIDS']
                 print "Toremove ", toRemove
 

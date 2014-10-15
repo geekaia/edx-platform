@@ -25,8 +25,8 @@ import threading
 from threading import Thread
 
 # Global tread, que servirá para quando tivermos requisições concorrentes
-lock = threading.Lock()
 
+lock={}
 
 class CadVersao(Thread):
     """
@@ -47,9 +47,13 @@ class CadVersao(Thread):
     def run(self):
         chapter=self.chapter
         usuario=self.usuario
-        lock.acquire() #acquire the lock
+
+        opc = OpcoesExperiment.objects.get(sectionExp_url=self.chapter)
+        print "My thread: ", opc.experimento.id
+        lock[opc.experimento.id] = threading.Lock()
+        lock[opc.experimento.id].acquire() #acquire the lock
         self.vercad = VerABprint(chapter, usuario)
-        lock.release()
+        lock[opc.experimento.id].release()
 
     def getResult(self):
         return self.vercad
@@ -390,8 +394,10 @@ def cadastraVersao(user,URL,urlExp):
                     versao ='A'
                 elif ver == 1:
                     versao = 'B'
-                else:
+                elif ver == 2:
                     versao = 'C'
+                else:
+                    versao = 'D'
 
                 URLChoice = CHOICESG[ver]
 
