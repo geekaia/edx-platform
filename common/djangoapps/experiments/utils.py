@@ -578,7 +578,7 @@ def cadastraVersao(user,URL,urlExp):
         try:
 
             if curso:
-                if ExpPart.strategy.strategyType != "crossover" and ExpPart.strategy.strategyType != "cluster":
+                if ExpPart.strategy.strategyType != "crossover":
                     expsCurso = ExperimentDefinition.objects.filter(course=curso)
 
                     print "tamanho: ", len(expsCurso)

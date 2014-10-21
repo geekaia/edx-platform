@@ -189,7 +189,6 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
 
             elif strategySel == 'UniformChoice':
                 strategy.save()
-
                 print "A estratégia é UniformChoice"
                 mensagemUniformChoice = "UniformChoice Salvo!"
 
