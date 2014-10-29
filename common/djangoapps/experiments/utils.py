@@ -491,7 +491,7 @@ def cadastraVersao(user,URL,urlExp):
                 print "Variáveis passadas: ", IDADE, ' ', CIDADE, ' ', PAIS, ' ', INSTRUCAO, ' ', SEXO
 
                 # Tem que pegar todos os dados do profile do usuário a cidade nao funciona muito bem NEED more work
-                exp = ExpPlanoutScript(userid=user.id,  CHOICES=CHOICESG, IDADE=IDADE,  CIDADE=CIDADE, PAIS=PAIS, INSTRUCAO=INSTRUCAO,  SEXO=SEXO)
+                exp = ExpPlanoutScript(userid=user.id,  choices=CHOICESG, age=IDADE,  city=CIDADE, country=PAIS, leveleducation=INSTRUCAO,  gender=SEXO)
                 conversao = False
                 deuerro = False
                 bloco = -1
