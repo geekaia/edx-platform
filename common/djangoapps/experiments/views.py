@@ -402,7 +402,7 @@ def DefineStrategy(request,  course_key_string, idExperiment=None):
             'mensagemCluster': mensagemCluster,
             'exps': opcsSel,
             'periodos': strategy.periodos,
-            "expRel": strategy.periodoRel,
+            "expRel": (-1 if type(strategy.periodoRel) == type(None) else strategy.periodoRel.id),
             'linhas': linhas,
             'selectsgrupos': selectsgrupos,
 

@@ -120,7 +120,7 @@
               <option value="NaN">NaN</option>
                 % for exp in exps:
                         <option value="${exp.id}"
-                                % if exp.id == expRel.id:
+                                % if exp.id == expRel:
                                     selected
                                 % endif
                         >${exp.id} -- ${exp.descricao}</option>
