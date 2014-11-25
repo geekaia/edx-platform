@@ -19,7 +19,7 @@ from abc import ABCMeta, abstractmethod
 from student.models import UserProfile
 from datetime import date
 
-
+from datetime import *
 
 import threading
 from threading import Thread
@@ -158,9 +158,14 @@ def cadastraVersao(user,URL,urlExp):
         exp = None
         bloco = 0
 
+        print "Opções: ", CHOICESG
+
         # Pega a estratégia de randomização
         if strat.strategyType == 'UniformChoice':
             class UrlExperiment(SimpleExperiment):
+              def setup(self):
+                self.salt = str(datetime.now())
+
               def assign(self, params, userid):
                 params.URL = UniformChoice(choices=CHOICESG, unit=userid)
 
@@ -368,6 +373,8 @@ def cadastraVersao(user,URL,urlExp):
                 percents.append(float(i))
 
             class UrlExperimentWeighted(SimpleExperiment):
+              def setup(self):
+                self.salt = str(datetime.now())
               def assign(self, params, userid):
                 params.URL = WeightedChoice(choices=CHOICESG, weights=percents, unit=userid)
 
@@ -564,12 +571,13 @@ def cadastraVersao(user,URL,urlExp):
 
         if num == 0 and conversao == False :
             versao = 'A' # Removi o balanceamento de 50 50
-
         elif num == 1 and conversao == False:
             versao = 'B'
-        elif conversao == False:
+        elif num == 2 and conversao == False:
             versao = 'C'
-        print "Here2"
+        elif conversao == False:
+            versao = 'D'
+
 
         # Um usuário que escolhe uma versão
         # estará nela para sempre
