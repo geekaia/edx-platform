@@ -115,9 +115,6 @@ def cadastraVersao(user,URL,urlExp):
 
 
 
-
-
-
     Esta função faz a randomização e em seguida faz o cadastro na entidade UserChoiceExperiment. A randomização ocorre de acordo com o que estiver
     definido na entidade StrategyRandomization no campo strategyType. Atualmente é possível alternar entre as randomizações:
             UniformChoice, WeightedChoice, PlanoutScript e CustomDesign (design do experimento criado pelo R, JMP, SAS ou Minitab)
@@ -579,6 +576,9 @@ def cadastraVersao(user,URL,urlExp):
             versao = 'D'
 
 
+        print "Versao: ", versao
+
+
         # Um usuário que escolhe uma versão
         # estará nela para sempre
         # e todo o sempre
@@ -808,6 +808,7 @@ def VerABprint(URL, user):
                     return False
             else:
                 if len(expsChoices) == 0:
+                    print "Cadastrando versao 1"
                     return cadastraVersao(user,URL,urlExp)
                 else:
                     print "Terceiro"

@@ -157,9 +157,6 @@ def DesignAsCSV(request, course_id,  idExp):
 
 
 
-
-
-
         for ChoiceUser in versionUsers:
 
             courseware_summary = []
