@@ -49,11 +49,23 @@ class CadVersao(Thread):
         usuario=self.usuario
 
         opc = OpcoesExperiment.objects.get(sectionExp_url=self.chapter)
-        print "My thread: ", opc.experimento.id
-        lock[opc.experimento.id] = threading.Lock()
-        lock[opc.experimento.id].acquire() #acquire the lock
+        tip = opc.experimento.strategy.strategyType
+        lockid = -1
+
+        # Só deve-se obedecer uma sequência
+        if tip in ['customdesign', 'fatorial']:
+            print "By order"
+            lockid = opc.experimento.id
+        else:
+            print "By user"
+            lockid = usuario.id
+
+        print "My thread: ", lockid
+        lock[lockid] = threading.Lock()
+        lock[lockid].acquire() #acquire the lock
         self.vercad = VerABprint(chapter, usuario)
-        lock[opc.experimento.id].release()
+        lock[lockid].release()
+
 
     def getResult(self):
         return self.vercad
