@@ -57,7 +57,8 @@ class CadVersao(Thread):
             print "By order"
             lockid = opc.experimento.id
         else:
-            print "By user"
+            print "By user ", len(lock)
+
             lockid = usuario.id
 
         print "My thread: ", lockid
@@ -346,6 +347,13 @@ def cadastraVersao(user,URL,urlExp):
 
                 print "Groupuser: ", groupUser
 
+            # Procura pela versão e retorna a versão com null
+            if groupUser == -1:
+                try:
+                    g = GroupsCluster.objects.get(experiment=ExpPart, grupos=None)
+                    groupUser = g.id
+                except:
+                    groupUser = -1 # Vai ter que cadastrar um novo grupo que não tem nada
 
             # Pesquisa para ver se o grupo do aluno já teve randomização
             if groupUser != -1:
@@ -354,7 +362,7 @@ def cadastraVersao(user,URL,urlExp):
                 print 'g match searchi', groupMatch.versao != None, "Val"
 
                 if groupMatch.versao != None:
-                    print 'G  match is none'
+                    print 'G  match is not None.. Only get the version'
                     versao = groupMatch.versao.version
                     achei = True
                     conversao = True
@@ -370,6 +378,7 @@ def cadastraVersao(user,URL,urlExp):
 
             else:
                 # Cadastra Other - quer dizer que o aluno nao entrou em nenhum grupo
+                print "groupUser: ", groupUser
                 versao, achei, conversao, deuerro = cadGrupo(groupUser, groups, ExpPart, user.id)
                 URLChoice = options[versao].sectionExp_url
                 print "Versão: ", versao, "Url choice: ", URLChoice, " CONVERSAO: ", conversao, " Deurro: ", deuerro
@@ -521,8 +530,8 @@ def cadastraVersao(user,URL,urlExp):
                 f1 = exp.get('fat1')
                 f2 = exp.get('fat2')
 
-                fat1=int(f1)
-                fat2=int(f2)
+                fat1 = int(f1)
+                fat2 = int(f2)
 
                 if fat1==1 and fat2==1:
                     ver=0
@@ -556,6 +565,10 @@ def cadastraVersao(user,URL,urlExp):
         try:
             if len(URLChoice) == 0:
                 URLChoice = exp.get('URL')
+                print "Url choice: ", URLChoice
+                print "p1: ", exp.get('p1')
+                print "p2: ", exp.get('p2')
+                print "p3: ", exp.get('p3')
         except:
             print "Unexpected error1:", sys.exc_info()[0]
 
