@@ -45,27 +45,31 @@ class CadVersao(Thread):
         self.usuario=usuario
 
     def run(self):
-        chapter=self.chapter
-        usuario=self.usuario
+        try:
+            chapter=self.chapter
+            usuario=self.usuario
 
-        opc = OpcoesExperiment.objects.get(sectionExp_url=self.chapter)
-        tip = opc.experimento.strategy.strategyType
-        lockid = -1
+            opc = OpcoesExperiment.objects.get(sectionExp_url=self.chapter)
+            tip = opc.experimento.strategy.strategyType
+            lockid = -1
 
-        # Só deve-se obedecer uma sequência
-        if tip in ['customdesign', 'fatorial']:
-            print "By order"
-            lockid = opc.experimento.id
-        else:
-            print "By user ", len(lock)
+            # Só deve-se obedecer uma sequência
+            if tip in ['customdesign', 'fatorial']:
+                print "By order"
+                lockid = opc.experimento.id
+            else:
+                print "By user ", len(lock)
 
-            lockid = usuario.id
+                lockid = usuario.id
 
-        print "My thread: ", lockid
-        lock[lockid] = threading.Lock()
-        lock[lockid].acquire() #acquire the lock
-        self.vercad = VerABprint(chapter, usuario)
-        lock[lockid].release()
+            print "My thread: ", lockid
+            lock[lockid] = threading.Lock()
+            lock[lockid].acquire() #acquire the lock
+            self.vercad = VerABprint(chapter, usuario)
+            lock[lockid].release()
+        except:
+            print 'err'
+            self.vercad = False
 
 
     def getResult(self):
@@ -332,6 +336,8 @@ def cadastraVersao(user,URL,urlExp):
                         cityUser = normalize('NFKD', city).encode('ASCII','ignore').lower()
                         cityCad = normalize('NFKD', criterio['val']).encode('ASCII','ignore').lower()
 
+                        print "cityUser: ", cityUser, " cityCad: ", cityCad, " is in: ", cityCad in cityUser
+
                         if cityCad in cityUser:
                             matchCrits = True
                             continue
@@ -352,8 +358,10 @@ def cadastraVersao(user,URL,urlExp):
                 try:
                     g = GroupsCluster.objects.get(experiment=ExpPart, grupos=None)
                     groupUser = g.id
+                    bloco = g.id
                 except:
                     groupUser = -1 # Vai ter que cadastrar um novo grupo que não tem nada
+                    bloco = -10
 
             # Pesquisa para ver se o grupo do aluno já teve randomização
             if groupUser != -1:
@@ -561,14 +569,10 @@ def cadastraVersao(user,URL,urlExp):
                 print "Erro no Fatorial:"
 
 
-
         try:
             if len(URLChoice) == 0:
                 URLChoice = exp.get('URL')
                 print "Url choice: ", URLChoice
-                print "p1: ", exp.get('p1')
-                print "p2: ", exp.get('p2')
-                print "p3: ", exp.get('p3')
         except:
             print "Unexpected error1:", sys.exc_info()[0]
 
