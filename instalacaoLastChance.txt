@@ -1,0 +1,93 @@
+cd /etc/apt/sources.list.d
+echo "deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen " > downloads_distro_mongodb_org_repo_ubuntu_upstart.list 
+echo "deb http://ppa.launchpad.net/git-core/ppa/ubuntu precise main " > ppa_git_core_ppa_precise.list
+echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu precise main " > webupd8team-java-precise.list
+echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu precise main " >> webupd8team-java-precise.list
+echo "deb http://www.rabbitmq.com/debian/ testing main " > www_rabbitmq_com_debian.list
+
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys  F7B8CEA6056E8E56
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys C2518248EEA14886
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A1715D88E1DF1F24
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys  9ECBEC467F0CEB10
+
+sudo rm -rf /var/lib/apt/lists/*
+sudo apt-get update
+
+# Siga o tutorial para resolver o problema do ruby
+sudo gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3
+http://antjanus.com/blog/web-development-tutorials/back-end-development/fixing-debugger-linecache-failure-install-gem-native-extension-ruby-1-9-3/
+
+
+# Dependências iniciais
+sudo apt-get install -y build-essential software-properties-common python-software-properties curl git-core libxml2-dev libxslt1-dev python-pip python-apt python-dev
+
+
+# Execute este passo somente se acontecer um erro no virtualenv pip not found 
+#cd  /edx/app/edxapp/venvs/
+#virtualenv edxapp
+#chown  -Rf edxapp.edxapp edxapp
+
+
+# Pega a versao que está no servidor da USP em que a configuração deu certo e é diferente do master
+cd /var/tmp 
+wget https://dl.dropboxusercontent.com/u/15690847/configuracao.tar
+tar -xf configuracao.tar
+cd configuration
+# Pode-se verificar qual é a versão mais atual com  virtualenv --version     pip -V
+# Siga os passos abaixo caso apareça o erro pip ... command not found 
+
+pip install pip==1.5.4
+rm /usr/bin/pip
+ln -s /usr/local/bin/pip /usr/bin/pip
+
+pip install virtualenv==1.11.4
+pip install virtualenv-clone==0.2.5
+pip install virtualenvwrapper==4.2
+pip install setuptools==9.1
+pip install ansible==1.5.5
+
+# Teste o comando pip para ver se está funcionando 
+
+vim /var/tmp/configuration/requirements.txt
+#mude para ansible==1.5.5
+cd /var/tmp/configuration/
+pip install -r requirements.txt
+
+#vim /var/tmp/configuration/playbooks/roles/common/tasks/main.yml
+# Remova 
+#- name: Add git apt repository
+#  apt_repository ..... 
+
+
+# Comando de instalação
+cd /var/tmp/configuration/playbooks/edx-east && sudo ansible-playbook -c local --limit "localhost:127.0.0.1" ../edx_sandbox.yml -i "localhost," -e 'EDXAPP_PREVIEW_LMS_BASE=preview.edx.icmc.usp.br EDXAPP_CMS_BASE=studio.edx.icmc.usp.br  EDXAPP_LMS_BASE=edx.icmc.usp.br  EDXAPP_LMS_PREVIEW_NGINX_PORT=80 EDXAPP_CMS_NGINX_PORT=80 EDXAPP_LMS_NGINX_PORT=80'  --extra-vars "edx_platform_version=master ora2_version=hotfix-2014-02-21 certs_version=master forum_version=before-sort-preference xqueue_version=release-2013-12-23"
+
+# Com o comando dará um erro no xqueue 
+Vamos contornar o problema 
+cd /edx/app/xqueue/venvs/xqueue/bin
+source  activate
+pip install http://download.newrelic.com/python_agent/release/newrelic-1.8.0.13.tar.gz
+
+# Modificando as permissões 
+chown -Rf xqueue.xqueue /edx/app/xqueue/venvs/xqueue/
+
+# Agora não é mais necessário instalar o newrelic 
+vim /edx/app/xqueue/xqueue/requirements.txt
+# Remova a linha 
+newrelic==1.8.0.13
+
+# Rode novamente o comando de instalação 
+
+
+# Para instalar o planout 
+sudo -u edxapp bash
+source /edx/app/edxapp/edxapp_env
+pip install planout
+
+
+# Erro ainda ocorra um erro no Ruby env 
+gem install ruby-debug19 -- --with-ruby-include=$rvm_path/src/ruby-1.9.2-p136/
+gem install debugger-ruby_core_source
+
+
+

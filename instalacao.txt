@@ -12,6 +12,16 @@ sudo apt-get install -y build-essential software-properties-common python-softwa
 sudo pip install --upgrade pip
 sudo pip install --upgrade virtualenv
 
+ sudo apt-get install build-essential python-dev python-setuptools \
+                     python-numpy python-scipy \
+                     libatlas-dev libatlas3gf-base
+sudo apt-get install python-matplotlib
+sudo apt-get install python-sklearn
+apt-get install libmysqlclient-dev
+apt-get install python-dev
+#pip install mysql-python
+pip install django-crum
+
 # Configurações do edX 
 cd /var/tmp
 ######git clone -b release https://github.com/edx/configuration
@@ -41,15 +51,17 @@ vim /root/.my.cnf
 i
 [client]
 user=root
-password=300686
+password=XXXXXX
 
 
+#Erro Lang mongo 
+export LC_ALL=C
+
+# Erro SSL certificates 
+/usr/sbin/update-ca-certificates	
 
 # Execução da instalação # release-2014-06-17  -- versao anterior ao 
 cd /var/tmp/configuration/playbooks && sudo ansible-playbook -c local ./edx_sandbox.yml -i "localhost,"
-
-
-
 
 
 # Par habilitar conexões ssh 
